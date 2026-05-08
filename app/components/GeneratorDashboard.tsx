@@ -849,10 +849,16 @@ export default function GeneratorDashboard({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
-  // ---- Watch initialResult from parent (New Campaign = null, Load Campaign = data) ----
+  // ---- Watch initialResult from parent ----
+  // prevRef lets us skip the initial render (undefined) and only react
+  // to genuine changes: null = New Campaign, data = Load from History.
+  const prevInitialResult = useRef<GenerateResult | null | undefined>(initialResult);
   useEffect(() => {
+    if (prevInitialResult.current === initialResult) return; // no change
+    prevInitialResult.current = initialResult;
+
     if (initialResult === null) {
-      // New Campaign: reset everything
+      // New Campaign — reset all fields
       setResult(null);
       setFormData({ productName: "", description: "", contentType: "Produk Digital" });
       setTargetTags([]);
@@ -863,6 +869,7 @@ export default function GeneratorDashboard({
       setResult(initialResult);
     }
   }, [initialResult]);
+
 
   // Dynamic Loading Text
   const [loadingTextIndex, setLoadingTextIndex] = useState(0);
