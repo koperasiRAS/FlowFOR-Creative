@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "./components/Navbar";
-import SidebarWrapper from "./components/SidebarWrapper";
+import AppShell from "./components/AppShell";
 import { SettingsProvider } from "./components/SettingsContext";
 
 export const metadata: Metadata = {
@@ -65,8 +64,7 @@ export default function RootLayout({
         
         <div className="relative z-10">
           <SettingsProvider>
-            <Navbar />
-            <SidebarWrapper />
+            <AppShell />
           </SettingsProvider>
         </div>
       </body>

@@ -55,7 +55,7 @@ function useHistory() {
 // ==============================================
 // SIDEBAR WRAPPER
 // ==============================================
-export default function SidebarWrapper() {
+export default function SidebarWrapper({ searchQuery = "" }: { searchQuery?: string }) {
   const [activePanel, setActivePanel] = useState<ActivePanel>("dashboard");
   const [selectedCampaign, setSelectedCampaign] = useState<GenerateResult | null>(null);
   const { history, addHistoryItem, deleteHistoryItem } = useHistory();
@@ -72,6 +72,23 @@ export default function SidebarWrapper() {
     setSelectedCampaign(null);
     setActivePanel("dashboard");
   }, []);
+
+  // Auto-switch to history panel when user types in search bar
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      setActivePanel("history");
+    }
+  }, [searchQuery]);
+
+  // Filtered history based on search query
+  const filteredHistory = searchQuery.trim()
+    ? history.filter(
+        (item) =>
+          item.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.contentType.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.targetAudience?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : history;
 
   // When GeneratorDashboard completes a generate → save to history
   const handleGenerateSuccess = useCallback(
@@ -91,7 +108,8 @@ export default function SidebarWrapper() {
       case "history":
         return (
           <HistoryPanel
-            history={history}
+            history={filteredHistory}
+            searchQuery={searchQuery}
             onLoadCampaign={handleLoadCampaign}
             onDeleteCampaign={deleteHistoryItem}
             onBack={() => setActivePanel("dashboard")}

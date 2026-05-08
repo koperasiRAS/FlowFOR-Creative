@@ -6,7 +6,6 @@ import {
   History,
   Settings,
   Sparkles,
-  Star,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -61,28 +60,22 @@ export default function Sidebar({ activePanel, onPanelChange, onNewCampaign }: S
 
         {/* Top: Creator Hub (Logo) */}
         <div className={`p-4 border-b border-black/5 dark:border-white/10 ${collapsed ? "flex justify-center" : ""}`}>
-          {collapsed ? (
+        {collapsed ? (
             <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-              <Image src="/logo.png" alt="FlowFOR Creative Logo" width={32} height={32} className="object-contain" />
+              <Image src="/logo2.png" alt="FlowFOR Creative Logo" width={32} height={32} className="object-contain" />
             </div>
           ) : (
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                <Image src="/logo.png" alt="FlowFOR Creative Logo" width={40} height={40} className="object-contain" />
+                <Image src="/logo2.png" alt="FlowFOR Creative Logo" width={40} height={40} className="object-contain" />
               </div>
               <div className="flex-1 leading-none overflow-hidden">
                 <p className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">
                   FlowFOR Creative
                 </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Star
-                    size={10}
-                    className="fill-amber-400 text-amber-400 flex-shrink-0"
-                  />
-                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium truncate">
-                    Pro Plan
-                  </span>
-                </div>
+                <span className="text-[10px] font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                  Powered by Gemini
+                </span>
               </div>
             </div>
           )}

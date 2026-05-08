@@ -9,7 +9,6 @@ import {
   Smartphone,
   AlertCircle,
   Sparkles,
-  Star,
   X,
   Share2,
   Download,
@@ -850,6 +849,21 @@ export default function GeneratorDashboard({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
+  // ---- Watch initialResult from parent (New Campaign = null, Load Campaign = data) ----
+  useEffect(() => {
+    if (initialResult === null) {
+      // New Campaign: reset everything
+      setResult(null);
+      setFormData({ productName: "", description: "", contentType: "Produk Digital" });
+      setTargetTags([]);
+      setErrorMessage(null);
+      setCopiedCard(null);
+    } else if (initialResult) {
+      // Load from history
+      setResult(initialResult);
+    }
+  }, [initialResult]);
+
   // Dynamic Loading Text
   const [loadingTextIndex, setLoadingTextIndex] = useState(0);
   const loadingTexts = [
@@ -1014,25 +1028,18 @@ export default function GeneratorDashboard({
           {/* ===== LEFT COLUMN — INPUT FORM ===== */}
           <div className="glass-card p-6 lg:sticky lg:top-20 space-y-5 animate-slide-up">
 
-            {/* Creator Hub Section */}
+            {/* Welcome Banner */}
             <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-white/10">
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                <span className="text-white text-sm font-semibold">R</span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                  👋 Selamat datang di FlowFOR Creative!
+                </p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                  Isi form di bawah dan biarkan AI Gemini membuatkan launch kit lengkap untukmu.
+                </p>
               </div>
-              {/* Info */}
-              <div className="flex-1 leading-none">
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-100">FlowFOR Creative</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5">
-                    <Star size={11} className="fill-amber-400 text-amber-400" />
-                    Pro Plan
-                  </span>
-                </div>
-              </div>
-              {/* Gemini badge */}
-              <div className="text-[10px] font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
-                Gemini AI
+              <div className="text-[10px] font-semibold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/40 px-2.5 py-1.5 rounded-full whitespace-nowrap flex items-center gap-1">
+                ✨ Gemini AI
               </div>
             </div>
 
