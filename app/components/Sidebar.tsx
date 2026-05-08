@@ -4,8 +4,6 @@ import { useState } from "react";
 import {
   LayoutDashboard,
   History,
-  CalendarDays,
-  FileText,
   Settings,
   Sparkles,
   Star,
@@ -16,8 +14,6 @@ import {
 export type ActivePanel =
   | "dashboard"
   | "history"
-  | "calendar"
-  | "script"
   | "settings";
 
 interface SidebarProps {
@@ -32,8 +28,6 @@ const NAV_ITEMS: {
 }[] = [
   { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { id: "history", icon: History, label: "Riwayat Campaign" },
-  { id: "calendar", icon: CalendarDays, label: "Content Calendar" },
-  { id: "script", icon: FileText, label: "Content Script" },
 ];
 
 export default function Sidebar({ activePanel, onPanelChange }: SidebarProps) {

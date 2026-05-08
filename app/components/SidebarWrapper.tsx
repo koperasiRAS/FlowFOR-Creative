@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import Sidebar, { type ActivePanel } from "./Sidebar";
 import GeneratorDashboard from "./GeneratorDashboard";
 import HistoryPanel from "./HistoryPanel";
-import ContentCalendar from "./ContentCalendar";
 import SettingsPanel from "./SettingsPanel";
 import type { HistoryItem, GenerateResult } from "./GeneratorDashboard";
 import { useSettings } from "./SettingsContext";
@@ -90,16 +89,6 @@ export default function SidebarWrapper() {
             onLoadCampaign={handleLoadCampaign}
             onDeleteCampaign={deleteHistoryItem}
             onBack={() => setActivePanel("dashboard")}
-          />
-        );
-      case "calendar":
-        return (
-          <ContentCalendar
-            onBack={() => setActivePanel("dashboard")}
-            productName={
-              history.find((h) => h.result === selectedCampaign)?.productName
-            }
-            calendarData={selectedCampaign?.contentCalendar}
           />
         );
       case "settings":

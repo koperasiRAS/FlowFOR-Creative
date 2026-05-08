@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, ArrowLeft } from "lucide-react";
+import { Calendar } from "lucide-react";
 import type { ContentCalendarEntry } from "./GeneratorDashboard";
 
 interface ContentCalendarProps {
-  onBack: () => void;
   productName?: string;
   calendarData?: ContentCalendarEntry[];
 }
@@ -41,7 +40,6 @@ function buildGrid(entries: ContentCalendarEntry[]) {
 }
 
 export default function ContentCalendar({
-  onBack,
   productName = "Campaign",
   calendarData = [],
 }: ContentCalendarProps) {
@@ -54,27 +52,21 @@ export default function ContentCalendar({
       : null;
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto">
-      {/* Header */}
-      <button
-        onClick={onBack}
-        className="mb-4 text-sm text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
-      >
-        <ArrowLeft size={14} /> Kembali ke Generator
-      </button>
-
+    <div className="glass-card p-5 relative group transition-all duration-200 lg:col-span-2">
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-bold text-gray-800">
-            Content Calendar — {productName}
-          </h2>
-          <p className="text-xs text-gray-400">
+        <div className="flex items-center gap-2">
+          <span className="inline-block bg-pink-100 text-pink-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+            Calendar
+          </span>
+          <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
+            <span>📅</span> Content Calendar — {productName}
+          </h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-gray-400 hidden sm:block">
             {calendarData.length} posting days · 30-day plan
           </p>
         </div>
-        <button className="text-xs bg-purple-100 text-purple-700 px-3 py-2 rounded-xl font-medium hover:bg-purple-200 transition-colors flex items-center gap-1.5">
-          📄 Export Calendar as PDF
-        </button>
       </div>
 
       {calendarData.length === 0 ? (

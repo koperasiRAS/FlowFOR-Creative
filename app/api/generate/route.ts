@@ -224,6 +224,9 @@ export async function POST(req: NextRequest) {
       model: "gemini-2.5-flash",
       systemInstruction: SYSTEM_PROMPT,
       safetySettings,
+      generationConfig: {
+        responseMimeType: "application/json",
+      },
     });
 
     // 4. Build user prompt
@@ -286,7 +289,13 @@ Respond ONLY dengan raw JSON object. Tidak boleh ada markdown fences, tidak ada 
 
   } catch (err) {
     console.error("[API] Unexpected error:", err);
-    const message = err instanceof Error ? err.message : "Unknown error occurred";
+    let message = err instanceof Error ? err.message : "Unknown error occurred";
+    
+    // Make 503 errors more user-friendly
+    if (message.includes("503") || message.includes("Service Unavailable") || message.includes("high demand")) {
+      message = "Server AI sedang penuh (High Demand). Harap tunggu beberapa detik dan coba lagi ya! 🚀";
+    }
+
     return NextResponse.json(
       { error: `Server error: ${message}` },
       { status: 500 }

@@ -16,6 +16,8 @@ import {
   FileText,
 } from "lucide-react";
 
+import ContentCalendar from "./ContentCalendar";
+
 // ==============================================
 // TYPES
 // ==============================================
@@ -803,6 +805,27 @@ export default function GeneratorDashboard({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  
+  // Dynamic Loading Text
+  const [loadingTextIndex, setLoadingTextIndex] = useState(0);
+  const loadingTexts = [
+    "Menganalisis audiens...",
+    "Meracik copywriting...",
+    "Menyusun storyboard...",
+    "Menghitung Vibe Score...",
+    "Menyiapkan kalender konten..."
+  ];
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingTextIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setLoadingTextIndex((prev) => (prev + 1) % loadingTexts.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [isLoading, loadingTexts.length]);
 
   // Ref for bento grid (PDF export target)
   const bentoGridRef = useRef<HTMLDivElement>(null);
@@ -1103,7 +1126,7 @@ export default function GeneratorDashboard({
                 {isLoading ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    Generating Launch Kit...
+                    {loadingTexts[loadingTextIndex]}
                   </>
                 ) : (
                   <>
@@ -1223,9 +1246,19 @@ export default function GeneratorDashboard({
                     />
                   </div>
 
+                  {/* Row 7: Content Calendar */}
+                  {result?.contentCalendar && (
+                    <div className="animate-enter-6 mt-4">
+                      <ContentCalendar
+                        productName={formData.productName}
+                        calendarData={result.contentCalendar}
+                      />
+                    </div>
+                  )}
+
                   {/* Action Bar */}
                   {result && (
-                    <div className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-enter-6">
+                    <div className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-enter-7">
                       {/* Left: Branding */}
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
