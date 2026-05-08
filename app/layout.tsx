@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "./components/Navbar";
+import SidebarWrapper from "./components/SidebarWrapper";
+import { SettingsProvider } from "./components/SettingsContext";
 
 export const metadata: Metadata = {
   title: "FlowFOR Creative | Smart Launch Command Center",
@@ -23,8 +25,10 @@ export default function RootLayout({
         />
       </head>
       <body className="font-jakarta">
-        <Navbar />
-        {children}
+        <SettingsProvider>
+          <Navbar />
+          <SidebarWrapper />
+        </SettingsProvider>
       </body>
     </html>
   );

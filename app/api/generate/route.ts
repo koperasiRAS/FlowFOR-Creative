@@ -21,6 +21,10 @@ export interface GenerateRequestBody {
   targetAudience: string;
   description: string;
   contentType: string;
+  interestHint?: string;
+  language?: string;
+  copyLength?: string;
+  platforms?: string[];
 }
 
 export interface GenerateResponse {
@@ -30,6 +34,30 @@ export interface GenerateResponse {
   todoList: string[];
   storyboard: StoryboardItem[];
   vibeScore: VibeScore;
+  contentCalendar: ContentCalendarEntry[];
+  shootScript: ShootScriptData;
+  nicheRecommendation?: string;
+}
+
+interface ContentCalendarEntry {
+  day: number;
+  date: string;
+  platform: string;
+  type: string;
+  topic: string;
+  caption_hint: string;
+}
+
+interface ShootScriptData {
+  format: string;
+  duration: string;
+  scenes: {
+    scene: string;
+    action: string;
+    dialogue: string;
+    camera: string;
+  }[];
+  tips: string[];
 }
 
 // ==============================================
@@ -43,12 +71,14 @@ Kamu expert dalam:
 - Content planning untuk Reels, TikTok, WA/Telegram community
 - Viral marketing dan engagement optimization
 - Storyboard creation untuk video short-form
+- Produksi video dan shoot script creation
 
 INPUT yang kamu terima:
 - productName: nama produk/campaign
 - targetAudience: siapa target audiens
 - description: deskripsi singkat produk
-- contentType: jenis konten (Produk Digital / Jasa/Service / Event/Webinar / Affiliate/Review)
+- contentType: jenis konten (Produk Digital / Jasa/Service / Event/Webinar / Affiliate/Review / Konten Edukasi / Konten Monetisasi / Podcast/Audio / Niche Finder)
+- interestHint: (opsional) minat/keahlian user — WAJIB digunakan saat contentType = "Niche Finder"
 
 ATURAN KRITIS:
 1. Respon dengan HANYA JSON object mentah. TANPA markdown fences. TANPA backticks. TANPA penjelasan sebelum atau sesudah JSON.
@@ -57,9 +87,38 @@ ATURAN KRITIS:
 4. Vibe Score harus realistis antara 0-100 berdasarkan kualitas konten yang dihasilkan.
 5. Storyboard HARUS 8 shot dengan detail visual dan audio yang spesifik.
 
+ATURAN SPESIFIK PER OUTPUT:
+
+SALES PAGE (landingPage):
+- MAXIMUM 150 words. Format WAJIB: 1 hook sentence + 5 bullet points menggunakan emoji + 1 CTA sentence.
+- Bullet points only — NO long paragraphs.
+
+CONTENT CALENDAR (contentCalendar):
+- Buat strategic 30-day content calendar.
+- Hanya include posting days (BUKAN setiap hari).
+- Target 3-4 posts per week = sekitar 15-18 entries total.
+- Distribusikan across platform yang relevan berdasarkan contentType dan target audience.
+- Platform yang digunakan: Instagram, TikTok, WhatsApp, YouTube.
+- Content types yang digunakan: Reels, Story, Post, Thread, Broadcast, Shorts.
+- Tidak boleh ada duplicate day number.
+
+SHOOT SCRIPT (shootScript):
+- Buat practical shooting script berdasarkan contentType.
+- Untuk Reels/TikTok: 8-10 scenes, max 60 detik total.
+- Untuk YouTube: 5-7 scenes, struktur intro+isi+outro.
+- Untuk Podcast: 4-5 segments, tanpa kolom camera.
+- SELALU include 2 practical production tips.
+
+NICHE FINDER:
+- Jika contentType = "Niche Finder" ATAU interestHint ada nilainya:
+  * BERDASARKAN interestHint, rekomendasikan 1 niche terbaik.
+  * Jelaskan dalam 1 kalimat kenapa niche itu cocok.
+  * Generate semua output lain DENGAN niche tersebut.
+  * WAJIB tambahkan field "nicheRecommendation": "string" dengan deskripsi 1 kalimat kenapa niche itu direkomendasikan.
+
 OUTPUT JSON WAJIB sesuai struktur ini:
 {
-  "landingPage": "string (full sales copy persuasif dengan bullet points menggunakan emoji)",
+  "landingPage": "string (sales copy persuasif MAXIMUM 150 words. Format WAJIB: 1 hook sentence + 5 bullet points menggunakan emoji + 1 CTA sentence. Bullet points only — NO long paragraphs.)",
   "caption": "string (hook di baris pertama + body + CTA + 3-5 hashtag di akhir baris)",
   "broadcast": "string (soft-selling message untuk grup WA/Telegram, friendly tone)",
   "todoList": [
@@ -94,7 +153,34 @@ OUTPUT JSON WAJIB sesuai struktur ini:
       "string (alasan 2...)",
       "string (alasan 3...)"
     ]
-  }
+  },
+  "contentCalendar": [
+    {
+      "day": number (1-30, BUKAN berurutan per tanggal — hanya posting days, target 15-18 entries total),
+      "date": "string (format: 'Day X')",
+      "platform": "string (Instagram / TikTok / WhatsApp / YouTube)",
+      "type": "string (Reels / Story / Post / Thread / Broadcast / Shorts)",
+      "topic": "string (hook: masalah yang diselesaikan produk, max 20 words)",
+      "caption_hint": "string (short hint untuk caption, max 15 words)"
+    }
+  ],
+  "shootScript": {
+    "format": "string (format video, misal: 'Reels 60 detik', 'YouTube Long-form', 'Podcast Audio')",
+    "duration": "string (durasi, misal: '60 detik', '15 menit')",
+    "scenes": [
+      {
+        "scene": "string (format: 'Scene X (0:XX-0:XX)')",
+        "action": "string (apa yang dilakukan di depan kamera, jelas dan spesifik)",
+        "dialogue": "string (kata-kata yang diucapkan, max 2 kalimat)",
+        "camera": "string (close-up wajah / wide shot / b-roll produk / overhead dll)"
+      }
+    ],
+    "tips": [
+      "string (tip produksi 1)",
+      "string (tip produksi 2)"
+    ]
+  },
+  "nicheRecommendation": "string (WAJIB HANYA jika contentType='Niche Finder' atau interestHint ada nilainya. Format: 'Niche: [nama]. Penjelasan 1 kalimat kenapa niche ini direkomendasikan untuk user berdasarkan minat mereka.')"
 }`;
 
 // ==============================================
@@ -147,6 +233,7 @@ PRODUCT NAME: ${productName}
 TARGET AUDIENCE: ${targetAudience}
 DESCRIPTION: ${description}
 CONTENT TYPE: ${contentType}
+${body.interestHint ? `USER INTEREST/HINT: ${body.interestHint}` : ""}
 
 Respond ONLY dengan raw JSON object. Tidak boleh ada markdown fences, tidak ada penjelasan di luar JSON. Langsung JSON object saja.`;
 
@@ -187,7 +274,7 @@ Respond ONLY dengan raw JSON object. Tidak boleh ada markdown fences, tidak ada 
     }
 
     // 8. Validate required fields
-    if (!parsed.landingPage || !parsed.caption || !parsed.broadcast || !parsed.todoList || !parsed.storyboard || !parsed.vibeScore) {
+    if (!parsed.landingPage || !parsed.caption || !parsed.broadcast || !parsed.todoList || !parsed.storyboard || !parsed.vibeScore || !parsed.contentCalendar || !parsed.shootScript) {
       return NextResponse.json(
         { error: "Gemini response is missing required fields.", parsed },
         { status: 500 }

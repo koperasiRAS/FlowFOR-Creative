@@ -1,6 +1,6 @@
 "use client";
 
-import { Zap, Search, Bell, HelpCircle } from "lucide-react";
+import { Zap, Search } from "lucide-react";
 
 export default function Navbar() {
   return (
@@ -48,19 +48,6 @@ export default function Navbar() {
 
         {/* Right: Icons + Avatar */}
         <div className="flex items-center gap-3">
-          {/* Bell */}
-          <button className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors">
-            <Bell size={18} />
-          </button>
-
-          {/* Help */}
-          <button className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors">
-            <HelpCircle size={18} />
-          </button>
-
-          {/* Divider */}
-          <div className="w-px h-5 bg-gray-200" />
-
           {/* Avatar */}
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600
                           flex items-center justify-center cursor-pointer shadow-sm">
