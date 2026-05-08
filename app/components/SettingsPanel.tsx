@@ -202,8 +202,8 @@ export default function SettingsPanel({ onBack }: SettingsPanelProps) {
 
         {/* App Info */}
         <div className="mt-8 pt-6 border-t border-gray-100 dark:border-white/5 text-center">
-          <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 tracking-widest uppercase">
-            FlowFOR Creative Intelligence · Premium Content Engineering · 2026
+          <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500 tracking-wide">
+            Powered by FlowFOR #JuaraVibeCoding
           </p>
         </div>
       </div>

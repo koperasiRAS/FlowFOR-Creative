@@ -1372,7 +1372,7 @@ export default function GeneratorDashboard({
                         </div>
                         <div>
                           <p className="text-[12px] font-bold text-gray-800 dark:text-gray-100 leading-none">FlowFOR Creative</p>
-                          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">© 2026 · Smart Launch Command Center</p>
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Powered by FlowFOR #JuaraVibeCoding</p>
                         </div>
                       </div>
 
