@@ -1200,9 +1200,13 @@ export default function GeneratorDashboard({
                 </label>
                 <select
                   id="contentType"
-                  className="form-input appearance-none cursor-pointer dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 bg-no-repeat bg-[right_12px_center]"
+                  className="form-input appearance-none cursor-pointer dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a855f7' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 12px center",
+                    backgroundSize: "16px 16px",
+                    paddingRight: "36px",
                   }}
                   value={formData.contentType}
                   onChange={(e) => handleChange("contentType", e.target.value)}
