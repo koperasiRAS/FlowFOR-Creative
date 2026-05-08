@@ -4,7 +4,7 @@ import { Zap, Search } from "lucide-react";
 
 export default function Navbar() {
   return (
-    <nav className="sticky top-0 z-50 w-full h-14 bg-white/80 backdrop-blur-md border-b border-white/40">
+    <nav className="sticky top-0 z-50 w-full h-14 bg-white/[0.85] backdrop-blur-[12px] border-b border-purple-500/10">
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between">
 
         {/* Left: Logo + Brand */}
@@ -38,10 +38,7 @@ export default function Navbar() {
             <input
               type="text"
               placeholder="Search campaigns..."
-              className="w-60 pl-9 pr-4 py-2 text-[13px] rounded-full bg-white/60 border border-white/40
-                         placeholder:text-gray-400 text-gray-700
-                         focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent
-                         transition-all duration-200"
+              className="form-input !rounded-full !py-2 !pl-9 !text-[13px]"
             />
           </div>
         </div>

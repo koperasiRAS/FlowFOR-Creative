@@ -104,7 +104,6 @@ export default function SidebarWrapper() {
           <GeneratorDashboard
             initialResult={selectedCampaign}
             onGenerateSuccess={handleGenerateSuccess}
-            settings={settings}
           />
         );
     }

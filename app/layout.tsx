@@ -24,11 +24,17 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-jakarta">
-        <SettingsProvider>
-          <Navbar />
-          <SidebarWrapper />
-        </SettingsProvider>
+      <body className="font-jakarta relative">
+        <div className="bg-blob-1"></div>
+        <div className="bg-blob-2"></div>
+        <div className="bg-blob-3"></div>
+        
+        <div className="relative z-10">
+          <SettingsProvider>
+            <Navbar />
+            <SidebarWrapper />
+          </SettingsProvider>
+        </div>
       </body>
     </html>
   );

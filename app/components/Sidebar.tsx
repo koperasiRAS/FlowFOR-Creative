@@ -9,7 +9,10 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  Sun,
+  Moon,
 } from "lucide-react";
+import Image from "next/image";
 
 export type ActivePanel =
   | "dashboard"
@@ -27,17 +30,29 @@ const NAV_ITEMS: {
   label: string;
 }[] = [
   { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { id: "history", icon: History, label: "Riwayat Campaign" },
+  { id: "history", icon: History, label: "Project Campaign" },
+  { id: "settings", icon: Settings, label: "Settings" },
 ];
 
 export default function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  const toggleTheme = () => {
+    if (isDark) {
+      document.documentElement.classList.remove("dark");
+      setIsDark(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      setIsDark(true);
+    }
+  };
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex flex-col bg-white border-r border-black/5 transition-all duration-300 ease-in-out relative flex-shrink-0 ${
+        className={`hidden md:flex flex-col bg-white/90 backdrop-blur-sm border-r border-purple-500/10 transition-all duration-300 ease-in-out relative flex-shrink-0 ${
           collapsed ? "w-16" : "w-60"
         }`}
         style={{ height: "100vh", position: "sticky", top: 0 }}
@@ -56,27 +71,27 @@ export default function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
           )}
         </button>
 
-        {/* Top: Creator Hub */}
-        <div className={`p-4 border-b border-black/5 ${collapsed ? "flex justify-center" : ""}`}>
+        {/* Top: Creator Hub (Logo) */}
+        <div className={`p-4 border-b border-black/5 dark:border-white/10 ${collapsed ? "flex justify-center" : ""}`}>
           {collapsed ? (
-            <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center shadow-md">
-              <span className="text-white text-sm font-semibold">R</span>
+            <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+              <Image src="/logo.png" alt="FlowFOR Creative Logo" width={32} height={32} className="object-contain" />
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center shadow-md flex-shrink-0">
-                <span className="text-white text-sm font-semibold">R</span>
+              <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                <Image src="/logo.png" alt="FlowFOR Creative Logo" width={40} height={40} className="object-contain" />
               </div>
               <div className="flex-1 leading-none overflow-hidden">
-                <p className="text-sm font-semibold text-gray-800 truncate">
-                  Creator Hub
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">
+                  FlowFOR Creative
                 </p>
-                <div className="flex items-center gap-1 mt-0.5">
+                <div className="flex items-center gap-1 mt-1">
                   <Star
                     size={10}
                     className="fill-amber-400 text-amber-400 flex-shrink-0"
                   />
-                  <span className="text-[11px] text-amber-600 font-medium truncate">
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium truncate">
                     Pro Plan
                   </span>
                 </div>
@@ -136,28 +151,15 @@ export default function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
           })}
         </nav>
 
-        {/* Settings at bottom */}
-        <div className="p-2 border-t border-black/5">
+        {/* Bottom Actions (Theme Toggle) */}
+        <div className="p-2 border-t border-black/5 dark:border-white/10 flex justify-center">
           <button
-            onClick={() => onPanelChange("settings")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
-              activePanel === "settings"
-                ? "bg-purple-50 text-purple-700"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
-            } ${collapsed ? "justify-center" : ""}`}
-            title={collapsed ? "Settings" : undefined}
+            onClick={toggleTheme}
+            className={`flex items-center justify-center p-2 rounded-xl transition-all duration-200 group bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 w-full ${collapsed ? "" : "gap-2"}`}
+            title="Toggle Theme"
           >
-            <Settings
-              size={18}
-              className={`flex-shrink-0 ${
-                activePanel === "settings"
-                  ? "text-purple-600"
-                  : "text-gray-400 group-hover:text-gray-600"
-              }`}
-            />
-            {!collapsed && (
-              <span className="text-sm font-medium">Settings</span>
-            )}
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            {!collapsed && <span className="text-sm font-medium">{isDark ? "Light Mode" : "Dark Mode"}</span>}
           </button>
         </div>
       </aside>

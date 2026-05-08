@@ -16,19 +16,91 @@
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: #f8fafc;
-  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 30%, #e0e7ff 60%, #f0f4ff 100%);
   min-height: 100vh;
+  color: rgb(var(--foreground-rgb));
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #1e1b4b 60%, #0f172a 100%); /* Add dark mode equivalent if needed, but keeping simple for now. Actually user didn't mention dark mode gradient. I'll just keep dark mode as is or adapt it gently. I will stick to what the user said for the body, but keep .dark body to prevent breaking the dark mode button. */
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+.bg-blob-1 {
+  position: fixed;
+  top: -100px;
+  left: -100px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-blob-2 {
+  position: fixed;
+  top: 200px;
+  right: -150px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-blob-3 {
+  position: fixed;
+  bottom: -100px;
+  left: 30%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(167,139,250,0.10) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Glass Card Effect */
 .glass-card {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 24px rgba(139, 92, 246, 0.08),
+              0 1px 4px rgba(0,0,0,0.04);
+  border-radius: 20px;
+}
+
+.dark .glass-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.form-input {
+  background: white;
+  border: 1.5px solid #d8b4fe;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #1f2937;
+  width: 100%;
+  transition: all 0.2s ease;
+  outline: none;
+}
+.form-input::placeholder {
+  color: #9ca3af;
+}
+.form-input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+}
+.form-input:hover {
+  border-color: #a78bfa;
 }
 
 /* Shimmer Animation for Loading Skeleton */

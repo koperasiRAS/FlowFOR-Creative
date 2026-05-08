@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import ContentCalendar from "./ContentCalendar";
+import { useSettings } from "./SettingsContext";
 
 // ==============================================
 // TYPES
@@ -90,12 +91,20 @@ interface GeneratorDashboardProps {
     targetAudience: string,
     contentType: string
   ) => void;
-  settings?: {
-    language: string;
-    copyLength: string;
-    platforms: string[];
-  };
 }
+
+const LANGUAGES = [
+  { label: "Bahasa Indonesia", value: "id" },
+  { label: "English", value: "en" },
+];
+
+const COPY_LENGTHS = [
+  { label: "Short (150 kata)", value: "short" },
+  { label: "Medium (250 kata)", value: "medium" },
+  { label: "Long (400 kata)", value: "long" },
+];
+
+const PLATFORMS = ["Instagram", "TikTok", "YouTube", "WhatsApp"];
 
 function TagInput({
   tags,
@@ -129,16 +138,14 @@ function TagInput({
 
   return (
     <div
-      className={`min-h-[48px] w-full px-3 py-2.5 rounded-xl border bg-white/70 transition-all duration-200
-        flex flex-wrap gap-2 items-center cursor-text
-        focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-transparent
+      className={`form-input !h-auto flex flex-wrap gap-2 items-center cursor-text
         ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
       onClick={() => !disabled && document.getElementById("tag-input-field")?.focus()}
     >
       {tags.map((tag, i) => (
         <span
           key={i}
-          className="flex items-center gap-1 bg-purple-100 text-purple-700 rounded-full px-3 py-1 text-xs font-medium animate-in fade-in slide-in-from-left-1"
+          className="flex items-center gap-1 bg-purple-100 text-purple-700 border border-purple-200 rounded-full px-3 py-1 text-xs font-medium animate-in fade-in slide-in-from-left-1"
         >
           {tag}
           {!disabled && (
@@ -789,8 +796,9 @@ const CONTENT_TYPES = [
 export default function GeneratorDashboard({
   initialResult,
   onGenerateSuccess,
-  settings,
 }: GeneratorDashboardProps = {}) {
+  const { settings, updateSettings } = useSettings();
+  
   // ---- State ----
   const [formData, setFormData] = useState<FormData>({
     productName: "",
@@ -980,30 +988,30 @@ export default function GeneratorDashboard({
         <ErrorToast message={errorMessage} onDismiss={() => setErrorMessage(null)} />
       )}
 
-      <div className="min-h-screen bg-slate-50 pt-6 pb-8 px-4">
+      <div className="min-h-screen bg-transparent pt-6 pb-8 px-4 transition-colors duration-300">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6 items-start">
 
           {/* ===== LEFT COLUMN — INPUT FORM ===== */}
           <div className="glass-card p-6 lg:sticky lg:top-20 space-y-5 animate-slide-up">
 
             {/* Creator Hub Section */}
-            <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-white/10">
               {/* Avatar */}
               <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
                 <span className="text-white text-sm font-semibold">R</span>
               </div>
               {/* Info */}
               <div className="flex-1 leading-none">
-                <p className="text-sm font-bold text-gray-800">Creator Hub</p>
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-100">FlowFOR Creative</p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[11px] text-amber-600 font-medium flex items-center gap-0.5">
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5">
                     <Star size={11} className="fill-amber-400 text-amber-400" />
                     Pro Plan
                   </span>
                 </div>
               </div>
               {/* Gemini badge */}
-              <div className="text-[10px] font-medium text-purple-700 bg-purple-100 px-2 py-1 rounded-full">
+              <div className="text-[10px] font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-full">
                 Gemini AI
               </div>
             </div>
@@ -1013,17 +1021,14 @@ export default function GeneratorDashboard({
 
               {/* Product Name */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Nama Produk / Campaign
                   <span className="text-purple-500 ml-1">*</span>
                 </label>
                 <input
                   type="text"
                   placeholder="Contoh: Bundle Template Canva Pro"
-                  className="w-full px-4 py-3 rounded-xl border border-white/50 bg-white/70 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent
-                             transition-all duration-200 placeholder:text-gray-400 text-gray-800
-                             disabled:opacity-60"
+                  className="form-input dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
                   value={formData.productName}
                   onChange={(e) => handleChange("productName", e.target.value)}
                   required
@@ -1033,7 +1038,7 @@ export default function GeneratorDashboard({
 
               {/* Target Audience — Tag Input */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Target Audiens
                   <span className="text-purple-500 ml-1">*</span>
                 </label>
@@ -1044,19 +1049,82 @@ export default function GeneratorDashboard({
                 />
               </div>
 
+              {/* Settings overrides in form */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Language */}
+                <div>
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Bahasa Output
+                  </label>
+                  <select
+                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer"
+                    value={settings.language}
+                    onChange={(e) => updateSettings({ ...settings, language: e.target.value })}
+                    disabled={isLoading}
+                  >
+                    {LANGUAGES.map((l) => (
+                      <option key={l.value} value={l.value}>{l.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Copy Length */}
+                <div>
+                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Panjang Copywriting
+                  </label>
+                  <select
+                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer"
+                    value={settings.copyLength}
+                    onChange={(e) => updateSettings({ ...settings, copyLength: e.target.value })}
+                    disabled={isLoading}
+                  >
+                    {COPY_LENGTHS.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Default Platforms Grid */}
+              <div>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Platform Utama
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {PLATFORMS.map((p) => {
+                    const isSelected = settings.platforms.includes(p);
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => {
+                          const next = isSelected ? settings.platforms.filter((x: string) => x !== p) : [...settings.platforms, p];
+                          updateSettings({ ...settings, platforms: next });
+                        }}
+                        disabled={isLoading}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                          isSelected
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                            : "border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-slate-800 text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Description */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Deskripsi Singkat Produk
                   <span className="text-purple-500 ml-1">*</span>
                 </label>
                 <textarea
                   placeholder="Jelaskan produk atau campaign yang ingin kamu launch..."
                   rows={4}
-                  className="w-full px-4 py-3 rounded-xl border border-white/50 bg-white/70 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent
-                             transition-all duration-200 placeholder:text-gray-400 text-gray-800
-                             resize-none disabled:opacity-60"
+                  className="form-input resize-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
                   value={formData.description}
                   onChange={(e) => handleChange("description", e.target.value)}
                   required
@@ -1066,14 +1134,11 @@ export default function GeneratorDashboard({
 
               {/* Content Type */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Jenis Konten
                 </label>
                 <select
-                  className="w-full px-4 py-3 rounded-xl border border-white/50 bg-white/70 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent
-                             transition-all duration-200 cursor-pointer text-gray-800
-                             disabled:opacity-60 appearance-none"
+                  className="form-input appearance-none cursor-pointer dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
                     backgroundRepeat: "no-repeat",
@@ -1101,8 +1166,7 @@ export default function GeneratorDashboard({
                   <textarea
                     placeholder="Contoh: Saya suka desain,fotografi, dan sudah 3 tahun belajar marketing digital..."
                     rows={3}
-                    className="w-full px-4 py-2.5 rounded-xl border border-purple-200 bg-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                    className="form-input resize-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
                     value={formData.interestHint || ""}
                     onChange={(e) => handleChange("interestHint", e.target.value)}
                     disabled={isLoading}
