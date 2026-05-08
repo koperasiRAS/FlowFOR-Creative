@@ -6,7 +6,7 @@ import GeneratorDashboard from "./GeneratorDashboard";
 import HistoryPanel from "./HistoryPanel";
 import SettingsPanel from "./SettingsPanel";
 import type { HistoryItem, GenerateResult } from "./GeneratorDashboard";
-import { useSettings } from "./SettingsContext";
+
 
 // ==============================================
 // useHistory — localStorage hook
@@ -29,7 +29,7 @@ function useHistory() {
         createdAt: new Date().toISOString(),
       };
       setHistory((prev) => {
-        const updated = [newItem, ...prev].slice(0, 10);
+        const updated = [newItem, ...prev].slice(0, 30);
         try {
           localStorage.setItem("flowfor_history", JSON.stringify(updated));
         } catch {}
@@ -59,7 +59,6 @@ export default function SidebarWrapper({ searchQuery = "" }: { searchQuery?: str
   const [activePanel, setActivePanel] = useState<ActivePanel>("dashboard");
   const [selectedCampaign, setSelectedCampaign] = useState<GenerateResult | null>(null);
   const { history, addHistoryItem, deleteHistoryItem } = useHistory();
-  const { settings, updateSettings } = useSettings();
 
   // When user clicks "Muat Ulang" from history → load result + switch to dashboard
   const handleLoadCampaign = useCallback((item: HistoryItem) => {

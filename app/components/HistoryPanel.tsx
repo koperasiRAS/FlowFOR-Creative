@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Calendar, Search } from "lucide-react";
 import type { HistoryItem } from "./GeneratorDashboard";
 
@@ -18,7 +19,14 @@ export default function HistoryPanel({
   onLoadCampaign,
   onDeleteCampaign,
 }: HistoryPanelProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const formatDate = (dateStr: string) => {
+    if (!mounted) return "";
     const date = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - date.getTime();

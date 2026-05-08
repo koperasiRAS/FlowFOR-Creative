@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "lucide-react";
 import type { ContentCalendarEntry } from "./GeneratorDashboard";
 
@@ -59,6 +59,23 @@ export default function ContentCalendar({
   calendarData = [],
 }: ContentCalendarProps) {
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="glass-card p-5 lg:col-span-2 min-h-[400px] flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-full mb-4"></div>
+          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
   const { grid, monthName, year, offset } = buildGrid(calendarData);
 
   const selectedEntry =
