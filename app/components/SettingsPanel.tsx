@@ -9,6 +9,7 @@ interface SettingsPanelProps {
 
 export default function SettingsPanel({ onBack }: SettingsPanelProps) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearStatus, setClearStatus] = useState<"idle" | "clearing">("idle");
   const [restoreStatus, setRestoreStatus] = useState<"idle" | "success" | "error">("idle");
   const [restoreMessage, setRestoreMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,10 +71,12 @@ export default function SettingsPanel({ onBack }: SettingsPanelProps) {
 
   // ---- Clear All ----
   const handleClearAll = () => {
-    localStorage.removeItem("flowfor_history");
-    localStorage.removeItem("flowfor_settings");
-    setShowClearConfirm(false);
-    window.location.reload();
+    setClearStatus("clearing");
+    setTimeout(() => {
+      localStorage.removeItem("flowfor_history");
+      localStorage.removeItem("flowfor_settings");
+      window.location.reload();
+    }, 500);
   };
 
   return (

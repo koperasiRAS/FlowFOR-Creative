@@ -37,13 +37,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     try {
       const raw = localStorage.getItem("flowfor_settings");
       if (raw) setSettings(JSON.parse(raw));
-      
+
       const savedTheme = localStorage.getItem("flowfor_theme");
       if (savedTheme === "dark") {
         document.documentElement.classList.add("dark");
         setIsDark(true);
       }
-    } catch {}
+    } catch (err) {
+      console.error("[SettingsContext] Gagal memuat settings:", err);
+    }
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -64,7 +66,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setSettings(next);
     try {
       localStorage.setItem("flowfor_settings", JSON.stringify(next));
-    } catch {}
+    } catch (err) {
+      console.error("[SettingsContext] Gagal simpan settings:", err);
+    }
   }, []);
 
   return (

@@ -147,7 +147,7 @@ export default function ContentCalendar({
                         : "bg-gray-50/50 dark:bg-gray-900/20 border-transparent opacity-30 cursor-default",
                     ].join(" ")}
                   >
-                    <p className="font-bold text-gray-400 dark:text-gray-600 text-[10px]">
+                    <p className="font-bold text-gray-500 dark:text-gray-400 text-[10px]">
                       {i - offset + 1 >= 1 && i - offset + 1 <= 31 ? i - offset + 1 : ""}
                     </p>
                     {entry && (

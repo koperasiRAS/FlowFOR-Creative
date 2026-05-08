@@ -84,9 +84,10 @@ export default function Navbar({ onSearch }: NavbarProps) {
             />
             <input
               type="text"
+              aria-label="Cari campaign"
               value={searchQuery}
               onChange={handleSearch}
-              placeholder="Search campaigns..."
+              placeholder="Cari campaign..."
               style={{
                 background: isDark ? "rgba(30,27,50,0.8)" : "rgba(245,243,255,0.9)",
                 border: "1.5px solid rgba(139,92,246,0.20)",

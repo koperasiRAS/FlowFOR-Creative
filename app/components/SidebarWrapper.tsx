@@ -12,13 +12,16 @@ import type { HistoryItem, GenerateResult } from "./GeneratorDashboard";
 // useHistory — localStorage hook
 // ==============================================
 function useHistory() {
+  const MAX_HISTORY = 30;
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem("flowfor_history");
       if (raw) setHistory(JSON.parse(raw));
-    } catch {}
+    } catch (err) {
+      console.error("[useHistory] Gagal memuat history:", err);
+    }
   }, []);
 
   const addHistoryItem = useCallback(
@@ -29,10 +32,12 @@ function useHistory() {
         createdAt: new Date().toISOString(),
       };
       setHistory((prev) => {
-        const updated = [newItem, ...prev].slice(0, 30);
+        const updated = [newItem, ...prev].slice(0, MAX_HISTORY);
         try {
           localStorage.setItem("flowfor_history", JSON.stringify(updated));
-        } catch {}
+        } catch (err) {
+          console.error("[useHistory] Gagal simpan history:", err);
+        }
         return updated;
       });
     },
@@ -44,7 +49,9 @@ function useHistory() {
       const updated = prev.filter((item) => item.id !== id);
       try {
         localStorage.setItem("flowfor_history", JSON.stringify(updated));
-      } catch {}
+      } catch (err) {
+        console.error("[useHistory] Gagal hapus history:", err);
+      }
       return updated;
     });
   }, []);

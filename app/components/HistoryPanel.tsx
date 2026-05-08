@@ -20,6 +20,7 @@ export default function HistoryPanel({
   onDeleteCampaign,
 }: HistoryPanelProps) {
   const [mounted, setMounted] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -107,6 +108,36 @@ export default function HistoryPanel({
           </p>
         </div>
       ) : (
+        <>
+          {/* Delete confirmation overlay */}
+          {confirmDeleteId && (
+            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="glass-card p-6 max-w-sm w-full text-center space-y-4">
+                <div className="text-4xl">🗑️</div>
+                <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">Hapus Campaign?</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Campaign ini akan dihapus permanen dari histori. Tindakan ini tidak bisa dibatalkan.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={() => {
+                      onDeleteCampaign?.(confirmDeleteId);
+                      setConfirmDeleteId(null);
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-red-500 text-white hover:bg-red-600 transition-colors"
+                  >
+                    Ya, Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         <div className="space-y-3">
           {history.map((item) => (
             <div
@@ -154,7 +185,7 @@ export default function HistoryPanel({
                   Muat
                 </button>
                 <button
-                  onClick={() => onDeleteCampaign?.(item.id)}
+                  onClick={() => setConfirmDeleteId(item.id)}
                   className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
                   title="Hapus campaign"
                 >
@@ -164,6 +195,7 @@ export default function HistoryPanel({
             </div>
           ))}
         </div>
+        </>
       )}
     </div>
   );

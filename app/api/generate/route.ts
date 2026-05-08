@@ -209,9 +209,30 @@ export async function POST(req: NextRequest) {
     const body = await req.json() as GenerateRequestBody;
     const { productName, targetAudience, description, contentType } = body;
 
-    if (!productName || !targetAudience || !description) {
+    // 2a. Input validation — max lengths to prevent DoS
+    const MAX = { productName: 200, targetAudience: 200, description: 2000, interestHint: 500 };
+    if (
+      !productName || !targetAudience || !description ||
+      productName.length > MAX.productName ||
+      targetAudience.length > MAX.targetAudience ||
+      description.length > MAX.description ||
+      (body.interestHint && body.interestHint.length > MAX.interestHint)
+    ) {
       return NextResponse.json(
-        { error: "productName, targetAudience, and description are required" },
+        { error: "Input terlalu panjang atau ada field yang kosong. Mohon periksa kembali." },
+        { status: 400 }
+      );
+    }
+
+    // 2b. Validate contentType against allowed values
+    const VALID_CONTENT_TYPES = [
+      "Produk Digital", "Jasa/Service", "Event/Webinar",
+      "Affiliate/Review", "Konten Edukasi", "Konten Monetisasi",
+      "Podcast/Audio", "Niche Finder",
+    ];
+    if (contentType && !VALID_CONTENT_TYPES.includes(contentType)) {
+      return NextResponse.json(
+        { error: "contentType tidak valid." },
         { status: 400 }
       );
     }
@@ -254,8 +275,23 @@ PENTING:
 - Gunakan HANYA platform: ${selectedPlatforms}.
 - Respond ONLY dengan raw JSON object.`;
 
-    // 5. Call Gemini
-    const result = await model.generateContent(userPrompt);
+    // 5. Call Gemini with timeout
+    let result;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90_000); // 90s timeout
+    try {
+      result = await model.generateContent(userPrompt, { signal: controller.signal });
+    } catch (genErr: unknown) {
+      clearTimeout(timeoutId);
+      if (genErr instanceof Error && genErr.name === "AbortError") {
+        return NextResponse.json(
+          { error: "Request timeout. Gemini AI butuh waktu terlalu lama. Coba lagi dengan deskripsi yang lebih singkat." },
+          { status: 504 }
+        );
+      }
+      throw genErr;
+    }
+    clearTimeout(timeoutId);
     const response = result.response;
     const rawText = response.text();
 

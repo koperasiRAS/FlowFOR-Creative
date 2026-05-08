@@ -102,6 +102,17 @@ const COPY_LENGTHS = [
   { label: "Long (400 kata)", value: "long" },
 ];
 
+const CONTENT_TYPES = [
+  { value: "Produk Digital", label: "Produk Digital" },
+  { value: "Jasa/Service", label: "Jasa/Service" },
+  { value: "Event/Webinar", label: "Event/Webinar" },
+  { value: "Affiliate/Review", label: "Affiliate/Review" },
+  { value: "Konten Edukasi", label: "Konten Edukasi" },
+  { value: "Konten Monetisasi", label: "Konten Monetisasi" },
+  { value: "Podcast/Audio", label: "Podcast/Audio" },
+  { value: "Niche Finder", label: "Niche Finder" },
+];
+
 const PLATFORMS = ["Instagram", "TikTok", "YouTube", "WhatsApp"];
 
 function TagInput({
@@ -210,9 +221,24 @@ function MobilePreviewModal({
   onClose: () => void;
   caption: string;
 }) {
+  // ESC key to close
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mobile-preview-title"
+    >
       <div className="relative max-w-sm mx-auto">
         <div className="bg-gray-900 rounded-[40px] p-3 shadow-2xl">
           <div className="bg-white rounded-[32px] overflow-hidden w-72 h-[580px] flex flex-col">
@@ -383,6 +409,8 @@ function ToDoListCard({
             <div key={i} className="skeleton h-4 w-full" />
           ))}
         </div>
+      ) : items.length === 0 ? (
+        <p className="text-xs text-gray-400 text-center py-4">Belum ada todo item</p>
       ) : (
         <div className="space-y-1.5">
           {items.map((item, i) => (
@@ -585,7 +613,7 @@ function ShootScriptCard({
               </tr>
             </thead>
             <tbody>
-              {script.scenes.map((s, i) => (
+              {script.scenes?.map((s, i) => (
                 <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <td className="px-3 py-2 font-medium text-cyan-600 whitespace-nowrap">{s.scene}</td>
                   <td className="px-3 py-2 text-gray-600">{s.action}</td>
@@ -632,6 +660,7 @@ function VibeScoreCard({
   copied?: boolean;
   isLoading?: boolean;
 }) {
+  const { isDark } = useSettings();
   const [displayScore, setDisplayScore] = useState(0);
   const colorClass = score.score <= 40 ? "text-red-500" : score.score <= 70 ? "text-yellow-500" : "text-green-500";
   const ringColorClass = score.score <= 40 ? "#ef4444" : score.score <= 70 ? "#eab308" : "#22c55e";
@@ -660,7 +689,7 @@ function VibeScoreCard({
 
   // Conic gradient for ring: percentage filled with color, rest gray
   const fillDeg = (score.score / 100) * 360;
-  const ringBg = `conic-gradient(${ringColorClass} 0deg ${fillDeg}deg, #e5e7eb ${fillDeg}deg 360deg)`;
+  const ringBg = `conic-gradient(${ringColorClass} 0deg ${fillDeg}deg, ${isDark ? "#334155" : "#e5e7eb"} ${fillDeg}deg 360deg)`;
 
   return (
     <div className="glass-card p-5 relative group lg:col-span-2 transition-all duration-200">
@@ -793,6 +822,25 @@ function SalesPageCard({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ==============================================
+// ERROR TOAST
+// ==============================================
+function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-red-500 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-lg flex items-center gap-3 max-w-md"
+    >
+      <AlertCircle size={16} />
+      <span className="flex-1">{message}</span>
+      <button onClick={onDismiss} className="text-white/70 hover:text-white text-lg leading-none">
+        ×
+      </button>
     </div>
   );
 }
@@ -959,7 +1007,7 @@ export default function GeneratorDashboard({
   const landingPageText = result?.landingPage ?? "";
   const captionText = result?.caption ?? "";
   const broadcastText = result?.broadcast ?? "";
-  const todoListText = result?.todoList.map((t, i) => `${i + 1}. ${t}`).join("\n") ?? "";
+  const todoListText = result?.todoList?.map((t, i) => `${i + 1}. ${t}`).join("\n") ?? "";
   const storyboardText =
     result?.storyboard.map((s) => `${s.shot}\nVisual: ${s.visual}\nAudio: ${s.audio}`).join("\n\n") ?? "";
   const vibeScoreText = result
@@ -989,7 +1037,11 @@ export default function GeneratorDashboard({
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-purple-600 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-lg toast-in flex items-center gap-2">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-purple-600 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-lg toast-in flex items-center gap-2"
+        >
           <span className="pulse-dot" />
           {toast}
         </div>
@@ -1026,11 +1078,12 @@ export default function GeneratorDashboard({
 
               {/* Product Name */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="productName" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Nama Produk / Campaign
                   <span className="text-purple-500 ml-1">*</span>
                 </label>
                 <input
+                  id="productName"
                   type="text"
                   placeholder="Contoh: Bundle Template Canva Pro"
                   className="form-input dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
@@ -1043,10 +1096,10 @@ export default function GeneratorDashboard({
 
               {/* Target Audience — Tag Input */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <span className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Target Audiens
                   <span className="text-purple-500 ml-1">*</span>
-                </label>
+                </span>
                 <TagInput
                   tags={targetTags}
                   onChange={setTargetTags}
@@ -1058,10 +1111,11 @@ export default function GeneratorDashboard({
               <div className="grid grid-cols-2 gap-4">
                 {/* Language */}
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label htmlFor="bahasaOutput" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Bahasa Output
                   </label>
                   <select
+                    id="bahasaOutput"
                     className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer"
                     value={settings.language}
                     onChange={(e) => updateSettings({ ...settings, language: e.target.value })}
@@ -1074,10 +1128,11 @@ export default function GeneratorDashboard({
                 </div>
                 {/* Copy Length */}
                 <div>
-                  <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label htmlFor="panjangCopywriting" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                     Panjang Copywriting
                   </label>
                   <select
+                    id="panjangCopywriting"
                     className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer"
                     value={settings.copyLength}
                     onChange={(e) => updateSettings({ ...settings, copyLength: e.target.value })}
@@ -1092,9 +1147,9 @@ export default function GeneratorDashboard({
 
               {/* Default Platforms Grid */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <span className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Platform Utama
-                </label>
+                </span>
                 <div className="flex flex-wrap gap-2">
                   {PLATFORMS.map((p) => {
                     const isSelected = settings.platforms.includes(p);
@@ -1122,11 +1177,12 @@ export default function GeneratorDashboard({
 
               {/* Description */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="description" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Deskripsi Singkat Produk
                   <span className="text-purple-500 ml-1">*</span>
                 </label>
                 <textarea
+                  id="description"
                   placeholder="Jelaskan produk atau campaign yang ingin kamu launch..."
                   rows={4}
                   className="form-input resize-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
@@ -1139,10 +1195,11 @@ export default function GeneratorDashboard({
 
               {/* Content Type */}
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="contentType" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Jenis Konten
                 </label>
                 <select
+                  id="contentType"
                   className="form-input appearance-none cursor-pointer dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 bg-no-repeat bg-[right_12px_center]"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a855f7' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
@@ -1162,11 +1219,12 @@ export default function GeneratorDashboard({
               {/* Niche Finder: Interest Hint */}
               {showNicheFinder && (
                 <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl space-y-2">
-                  <label className="block text-[13px] font-medium text-purple-700">
+                  <label htmlFor="interestHint" className="block text-[13px] font-medium text-purple-700">
                     Ceritakan minat/keahlian kamu
                     <span className="text-purple-500 ml-1">*</span>
                   </label>
                   <textarea
+                    id="interestHint"
                     placeholder="Contoh: Saya suka desain,fotografi, dan sudah 3 tahun belajar marketing digital..."
                     rows={3}
                     className="form-input resize-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
