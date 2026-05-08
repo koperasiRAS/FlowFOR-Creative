@@ -38,13 +38,13 @@ export default function Navbar({ onSearch }: NavbarProps) {
     >
       <div className="h-full flex items-center">
 
-        {/* ── LEFT: Brand (flexible width on mobile, fixed 240px on desktop) ── */}
+        {/* ── LEFT: Logo only (no brand name here) ── */}
         <div
           className="w-auto md:w-60 flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 md:px-4 h-full border-r-0 md:border-r"
           style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(139,92,246,0.12)" }}
         >
           {/* Logo Icon Box */}
-          <div className="flex-shrink-0 flex items-center justify-center mr-1">
+          <div className="flex-shrink-0 flex items-center justify-center">
             <Image 
               src={isDark ? "/logo_white.png" : "/logo_new.png"} 
               alt="Logo" 
@@ -54,29 +54,30 @@ export default function Navbar({ onSearch }: NavbarProps) {
               priority
             />
           </div>
+        </div>
 
-          {/* Brand name — hidden on very small mobile, visible on tablet/desktop */}
+        {/* ── CENTER: App name + Search bar ── */}
+        <div className="flex-1 flex items-center gap-3 md:gap-6 px-3 md:px-6 min-w-0">
+          {/* App Name — visible on sm+ screens */}
           <span
-            className="hidden sm:block"
+            className="hidden sm:block flex-shrink-0"
             style={{
-              fontWeight: 700,
-              fontSize: "17px",
+              fontWeight: 800,
+              fontSize: "18px",
               background: "linear-gradient(135deg, #7C3AED, #4F46E5)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-              letterSpacing: "-0.3px",
+              letterSpacing: "-0.4px",
               lineHeight: 1,
               whiteSpace: "nowrap",
             }}
           >
             FlowFOR Creative
           </span>
-        </div>
 
-        {/* ── CENTER: Search bar (truly centered in remaining space) ── */}
-        <div className="flex-1 flex items-center justify-center px-2 md:px-6 min-w-0">
-          <div className="relative w-full max-w-[380px]">
+          {/* Search bar */}
+          <div className="relative w-full max-w-[360px]">
             <Search
               size={14}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
