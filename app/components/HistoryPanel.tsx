@@ -131,11 +131,12 @@ export default function HistoryPanel({
                       {highlight(item.targetAudience)}
                     </span>
                   )}
-                  <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">
-                    {formatDate(item.createdAt)}
-                  </span>
                 </div>
               </div>
+
+              <span className="text-xs text-gray-400 dark:text-gray-500 hidden md:block whitespace-nowrap">
+                {formatDate(item.createdAt)}
+              </span>
 
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button

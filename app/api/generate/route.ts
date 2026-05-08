@@ -94,12 +94,10 @@ SALES PAGE (landingPage):
 - Bullet points only — NO long paragraphs.
 
 CONTENT CALENDAR (contentCalendar):
-- Buat strategic 30-day content calendar.
+- Buat strategic content calendar untuk SISA HARI di bulan ini (Mulai dari tanggal hari ini yang diberikan).
+- Hanya gunakan PLATFORM yang dipilih oleh user: {platforms}.
 - Hanya include posting days (BUKAN setiap hari).
-- Target 3-4 posts per week = sekitar 15-18 entries total.
-- Distribusikan across platform yang relevan berdasarkan contentType dan target audience.
-- Platform yang digunakan: Instagram, TikTok, WhatsApp, YouTube.
-- Content types yang digunakan: Reels, Story, Post, Thread, Broadcast, Shorts.
+- Distribusikan secara cerdas agar campaign memuncak di akhir bulan.
 - Tidak boleh ada duplicate day number.
 
 SHOOT SCRIPT (shootScript):
@@ -156,9 +154,9 @@ OUTPUT JSON WAJIB sesuai struktur ini:
   },
   "contentCalendar": [
     {
-      "day": number (1-30, BUKAN berurutan per tanggal — hanya posting days, target 15-18 entries total),
-      "date": "string (format: 'Day X')",
-      "platform": "string (Instagram / TikTok / WhatsApp / YouTube)",
+      "day": number (Tanggal hari tersebut, misal: 15, 16, dst),
+      "date": "string (Nama Hari + Tanggal, misal: 'Senin, 15 Mei')",
+      "platform": "string (HANYA platform yang dipilih user)",
       "type": "string (Reels / Story / Post / Thread / Broadcast / Shorts)",
       "topic": "string (hook: masalah yang diselesaikan produk, max 20 words)",
       "caption_hint": "string (short hint untuk caption, max 15 words)"
@@ -229,16 +227,32 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 4. Build user prompt
-    const userPrompt = `Buatkan launch kit untuk produk berikut:
+    // 4. Build user prompt with real-time context
+    const today = new Date();
+    const currentMonth = today.toLocaleString('id-ID', { month: 'long' });
+    const currentDay = today.getDate();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const remainingDays = daysInMonth - currentDay + 1;
+    const selectedPlatforms = (body.platforms && body.platforms.length > 0) ? body.platforms.join(", ") : "Instagram, TikTok, WhatsApp, YouTube";
 
+    const userPrompt = `Buatkan launch kit untuk produk berikut:
+    
 PRODUCT NAME: ${productName}
 TARGET AUDIENCE: ${targetAudience}
 DESCRIPTION: ${description}
 CONTENT TYPE: ${contentType}
+BAHASA: ${body.language || 'id'}
+PANJANG COPY: ${body.copyLength || 'short'}
+PLATFORM TERPILIH: ${selectedPlatforms}
+TANGGAL HARI INI: ${currentDay} ${currentMonth}
+SISA HARI DI BULAN INI: ${remainingDays} hari
+
 ${body.interestHint ? `USER INTEREST/HINT: ${body.interestHint}` : ""}
 
-Respond ONLY dengan raw JSON object. Tidak boleh ada markdown fences, tidak ada penjelasan di luar JSON. Langsung JSON object saja.`;
+PENTING:
+- Content Calendar HARUS mulai dari tanggal ${currentDay} ${currentMonth} sampai akhir bulan.
+- Gunakan HANYA platform: ${selectedPlatforms}.
+- Respond ONLY dengan raw JSON object.`;
 
     // 5. Call Gemini
     const result = await model.generateContent(userPrompt);

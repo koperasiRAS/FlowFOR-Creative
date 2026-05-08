@@ -28,15 +28,30 @@ const TYPE_META: Record<string, string> = {
   Shorts: "bg-red-100 text-red-700",
 };
 
-// Build a 5-week grid (35 cells), starting Monday
+// Build a real calendar grid for the current month
 function buildGrid(entries: ContentCalendarEntry[]) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  
+  // First day of the month (0 = Sunday, 1 = Monday...)
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  // Adjust to start Monday (0 = Monday, 6 = Sunday)
+  const offset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+  
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
   const map = new Map(entries.map((e) => [e.day, e]));
-  // Day 1 starts on Monday — offset 0
-  const grid: (ContentCalendarEntry | null)[] = Array.from({ length: 35 }, (_, i) => {
-    const dayNum = i + 1;
-    return map.get(dayNum) ?? null;
+
+  // Create a 42-cell grid (6 weeks) to cover any month
+  const grid: (ContentCalendarEntry | null)[] = Array.from({ length: 42 }, (_, i) => {
+    const dayNum = i - offset + 1;
+    if (dayNum >= 1 && dayNum <= daysInMonth) {
+      return map.get(dayNum) ?? null;
+    }
+    return null; // Empty cell for padding
   });
-  return grid;
+  
+  return { grid, offset, daysInMonth, monthName: now.toLocaleString('id-ID', { month: 'long' }), year };
 }
 
 export default function ContentCalendar({
@@ -44,7 +59,7 @@ export default function ContentCalendar({
   calendarData = [],
 }: ContentCalendarProps) {
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
-  const grid = buildGrid(calendarData);
+  const { grid, monthName, year, offset } = buildGrid(calendarData);
 
   const selectedEntry =
     expandedDay !== null
@@ -58,8 +73,8 @@ export default function ContentCalendar({
           <span className="inline-block bg-pink-100 text-pink-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
             Calendar
           </span>
-          <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
-            <span>📅</span> Content Calendar — {productName}
+          <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm flex items-center gap-1.5">
+            <span>📅</span> Strategy Calendar — {monthName} {year}
           </h3>
         </div>
         <div className="flex items-center gap-2">
@@ -104,31 +119,31 @@ export default function ContentCalendar({
                   <button
                     key={i}
                     onClick={() =>
-                      setExpandedDay(
-                        isActive ? (isSelected ? null : entry!.day) : null
-                      )
+                      isActive ? setExpandedDay(isSelected ? null : entry!.day) : null
                     }
                     className={[
-                      "min-h-[56px] rounded-lg p-1.5 border text-left transition-all text-xs",
+                      "min-h-[64px] rounded-lg p-1.5 border text-left transition-all text-xs",
                       isActive
                         ? isSelected
-                          ? "bg-purple-100 border-purple-400 shadow-sm"
-                          : "bg-purple-50 border-purple-200 hover:border-purple-400 cursor-pointer"
-                        : "bg-gray-50 border-transparent opacity-30 cursor-default",
+                          ? "bg-purple-100 dark:bg-purple-900/40 border-purple-400 shadow-sm"
+                          : "bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800/50 hover:border-purple-400 cursor-pointer"
+                        : "bg-gray-50/50 dark:bg-gray-900/20 border-transparent opacity-30 cursor-default",
                     ].join(" ")}
                   >
-                    <p className="font-medium text-gray-500 text-[11px]">{i + 1}</p>
+                    <p className="font-bold text-gray-400 dark:text-gray-600 text-[10px]">
+                      {i - offset + 1 >= 1 && i - offset + 1 <= 31 ? i - offset + 1 : ""}
+                    </p>
                     {entry && (
-                      <div className="mt-0.5 flex items-center gap-0.5 flex-wrap">
+                      <div className="mt-1 flex flex-col gap-1">
                         <div
-                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          className={`px-1.5 py-0.5 rounded text-[8px] font-bold text-white text-center ${
                             PLATFORM_META[entry.platform]?.color ?? "bg-gray-400"
                           }`}
-                          title={entry.platform}
                         >
-                          <span className="text-white text-[7px] font-bold leading-none">
-                            {PLATFORM_META[entry.platform]?.short ?? "?"}
-                          </span>
+                          {PLATFORM_META[entry.platform]?.short ?? entry.platform}
+                        </div>
+                        <div className="text-[9px] text-purple-700 dark:text-purple-300 font-medium truncate">
+                          {entry.type}
                         </div>
                       </div>
                     )}

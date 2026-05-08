@@ -201,10 +201,11 @@ export default function SettingsPanel({ onBack }: SettingsPanelProps) {
         </div>
 
         {/* App Info */}
-        <div className="text-center text-[11px] text-gray-400 dark:text-gray-500 pt-2">
-          FlowFOR Creative v1.0 · Powered by Google Gemini AI · #JuaraVibeCoding
+        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-white/5 text-center">
+          <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 tracking-widest uppercase">
+            FlowFOR Creative Intelligence · Premium Content Engineering · 2026
+          </p>
         </div>
-
       </div>
     </div>
   );
