@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Navbar from "./components/Navbar";
 
 export const metadata: Metadata = {
   title: "FlowFOR Creative | Smart Launch Command Center",
@@ -21,7 +22,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-jakarta">{children}</body>
+      <body className="font-jakarta">
+        <Navbar />
+        {children}
+      </body>
     </html>
   );
 }

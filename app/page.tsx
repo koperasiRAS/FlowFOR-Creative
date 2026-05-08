@@ -1,7 +1,19 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { Zap, Loader2, Copy, Check, FileText, Smartphone, AlertCircle } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  Zap,
+  Loader2,
+  Copy,
+  Check,
+  Smartphone,
+  AlertCircle,
+  Sparkles,
+  Star,
+  X,
+  Share2,
+  Download,
+} from "lucide-react";
 
 // ==============================================
 // TYPES
@@ -29,9 +41,88 @@ interface GenerateResult {
 
 interface FormData {
   productName: string;
-  targetAudience: string;
   description: string;
   contentType: string;
+}
+
+// ==============================================
+// TAG INPUT COMPONENT
+// ==============================================
+function TagInput({
+  tags,
+  onChange,
+  disabled,
+}: {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+  disabled?: boolean;
+}) {
+  const [inputValue, setInputValue] = useState("");
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (disabled) return;
+    if ((e.key === "Enter" || e.key === ",") && inputValue.trim()) {
+      e.preventDefault();
+      const newTag = inputValue.trim().replace(/,$/, "");
+      if (newTag && !tags.includes(newTag) && tags.length < 5) {
+        onChange([...tags, newTag]);
+        setInputValue("");
+      }
+    } else if (e.key === "Backspace" && !inputValue && tags.length > 0) {
+      onChange(tags.slice(0, -1));
+    }
+  };
+
+  const removeTag = (index: number) => {
+    if (disabled) return;
+    onChange(tags.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div
+      className={`min-h-[48px] w-full px-3 py-2.5 rounded-xl border bg-white/70 transition-all duration-200
+        flex flex-wrap gap-2 items-center cursor-text
+        focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-transparent
+        ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+      onClick={() => !disabled && document.getElementById("tag-input-field")?.focus()}
+    >
+      {tags.map((tag, i) => (
+        <span
+          key={i}
+          className="flex items-center gap-1 bg-purple-100 text-purple-700 rounded-full px-3 py-1 text-xs font-medium animate-in fade-in slide-in-from-left-1"
+        >
+          {tag}
+          {!disabled && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeTag(i);
+              }}
+              className="hover:bg-purple-200 rounded-full p-0.5 transition-colors"
+            >
+              <X size={10} />
+            </button>
+          )}
+        </span>
+      ))}
+      {tags.length < 5 && (
+        <input
+          id="tag-input-field"
+          type="text"
+          placeholder={tags.length === 0 ? "Contoh: UMKM, Content Creator, Freelancer..." : "Tambah tag..."}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          className="flex-1 min-w-24 text-sm bg-transparent outline-none placeholder:text-gray-400 text-gray-700"
+        />
+      )}
+      {tags.length > 0 && (
+        <span className="ml-auto text-[10px] text-gray-400">{tags.length}/5 tags</span>
+      )}
+    </div>
+  );
 }
 
 // ==============================================
@@ -39,12 +130,16 @@ interface FormData {
 // ==============================================
 function EmptyState() {
   return (
-    <div className="col-span-2 glass-card p-8 flex flex-col items-center justify-center text-center min-h-48">
-      <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
-        <Zap className="text-indigo-500" size={32} />
+    <div className="col-span-2 glass-card p-10 flex flex-col items-center justify-center text-center min-h-56">
+      <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center mb-5">
+        <Sparkles size={40} className="text-purple-300" />
       </div>
-      <h3 className="font-semibold text-gray-700 mb-2">Generate your first campaign</h3>
-      <p className="text-gray-400 text-sm">Fill in the form and click Generate to see your AI-powered launch kit</p>
+      <h3 className="text-base font-semibold text-gray-700 mb-2">
+        Generate your first campaign
+      </h3>
+      <p className="text-[13px] text-gray-400 max-w-xs">
+        Fill in the form and click Generate to see your AI-powered launch kit
+      </p>
     </div>
   );
 }
@@ -67,7 +162,6 @@ function MobilePreviewModal({
       <div className="relative max-w-sm mx-auto">
         <div className="bg-gray-900 rounded-[40px] p-3 shadow-2xl">
           <div className="bg-white rounded-[32px] overflow-hidden w-72 h-[580px] flex flex-col">
-            {/* Status bar */}
             <div className="bg-gray-900 h-10 flex items-center justify-between px-6 text-white text-xs">
               <span>9:41</span>
               <div className="flex gap-1">
@@ -76,14 +170,12 @@ function MobilePreviewModal({
                 <div className="w-4 h-2 rounded-sm bg-white/30" />
               </div>
             </div>
-            {/* Notch */}
             <div className="bg-gray-900 h-6 flex justify-center items-center">
               <div className="bg-gray-900 w-24 h-5 rounded-b-2xl border border-gray-700" />
             </div>
-            {/* Content */}
             <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400" />
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-indigo-400" />
                 <div>
                   <div className="h-3 w-20 bg-gray-300 rounded" />
                   <div className="h-2 w-14 bg-gray-200 rounded mt-1" />
@@ -93,16 +185,15 @@ function MobilePreviewModal({
                 {caption}
               </div>
               <div className="mt-3 flex gap-2 flex-wrap">
-                <div className="h-5 w-16 bg-indigo-100 rounded-full" />
-                <div className="h-5 w-14 bg-indigo-100 rounded-full" />
-                <div className="h-5 w-20 bg-indigo-100 rounded-full" />
+                <div className="h-5 w-16 bg-purple-100 rounded-full" />
+                <div className="h-5 w-14 bg-purple-100 rounded-full" />
+                <div className="h-5 w-20 bg-purple-100 rounded-full" />
               </div>
               <div className="mt-4 flex gap-3">
                 <div className="h-20 w-20 bg-gray-200 rounded-xl" />
                 <div className="h-20 w-20 bg-gray-200 rounded-xl" />
               </div>
             </div>
-            {/* Home bar */}
             <div className="bg-gray-900 h-8 flex items-center justify-center">
               <div className="w-28 h-1.5 bg-gray-600 rounded-full" />
             </div>
@@ -127,32 +218,45 @@ function BentoCard({
   icon,
   content,
   colSpan = "",
+  className = "",
   onCopy,
   copied,
   isLoading,
+  pillBg = "bg-purple-100",
+  pillText = "text-purple-700",
+  pillLabel = "Card",
 }: {
   title: string;
   icon: string;
   content: React.ReactNode;
   colSpan?: string;
+  className?: string;
   onCopy?: () => void;
   copied?: boolean;
   isLoading?: boolean;
+  pillBg?: string;
+  pillText?: string;
+  pillLabel?: string;
 }) {
   return (
-    <div className={`glass-card p-5 relative group ${colSpan}`}>
+    <div className={`glass-card p-5 relative group transition-all duration-200 ${className} ${colSpan}`}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-          <span>{icon}</span> {title}
-        </h3>
+        <div className="flex items-center gap-2">
+          <span className={`inline-block ${pillBg} ${pillText} text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide`}>
+            {pillLabel}
+          </span>
+          <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
+            <span>{icon}</span> {title}
+          </h3>
+        </div>
         {!isLoading && onCopy && (
           <button
             onClick={onCopy}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600"
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600"
             title="Copy"
           >
             {copied ? (
-              <Check size={14} className="text-green-600" />
+              <Check size={14} className="text-green-500" />
             ) : (
               <Copy size={14} />
             )}
@@ -175,33 +279,42 @@ function BentoCard({
 }
 
 // ==============================================
-// TO-DO LIST (with interactive checkboxes)
+// TO-DO LIST CARD
 // ==============================================
 function ToDoListCard({
   items,
   onCopy,
   copied,
   isLoading,
+  className = "",
 }: {
   items: string[];
   onCopy?: () => void;
   copied?: boolean;
   isLoading?: boolean;
+  className?: string;
 }) {
-  const [checked, setChecked] = useState<boolean[]>(() => new Array(items.length).fill(false));
+  const [checked, setChecked] = useState<boolean[]>(() =>
+    new Array(items.length).fill(false)
+  );
 
   return (
-    <div className="glass-card p-5 relative group">
+    <div className={`glass-card p-5 relative group transition-all duration-200 ${className}`}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-          <span>✅</span> Launch To-Do List
-        </h3>
+        <div className="flex items-center gap-2">
+          <span className="inline-block bg-orange-100 text-orange-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+            To-Do
+          </span>
+          <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
+            <span>✅</span> Launch To-Do List
+          </h3>
+        </div>
         {!isLoading && onCopy && (
           <button
             onClick={onCopy}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600"
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600"
           >
-            {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
           </button>
         )}
       </div>
@@ -216,11 +329,11 @@ function ToDoListCard({
           {items.map((item, i) => (
             <label
               key={i}
-              className="flex items-start gap-3 text-sm cursor-pointer hover:bg-indigo-50 rounded-lg px-2 py-1.5 transition-colors"
+              className="flex items-start gap-3 text-sm cursor-pointer hover:bg-purple-50 rounded-lg px-2 py-1.5 transition-colors"
             >
               <input
                 type="checkbox"
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-indigo-500 focus:ring-indigo-400 cursor-pointer accent-indigo-500"
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-400 cursor-pointer accent-purple-500"
                 checked={checked[i]}
                 onChange={() => {
                   const next = [...checked];
@@ -228,7 +341,9 @@ function ToDoListCard({
                   setChecked(next);
                 }}
               />
-              <span className={checked[i] ? "line-through text-gray-400" : "text-gray-600"}>{item}</span>
+              <span className={checked[i] ? "line-through text-gray-400" : "text-gray-600"}>
+                {item}
+              </span>
             </label>
           ))}
         </div>
@@ -238,7 +353,7 @@ function ToDoListCard({
 }
 
 // ==============================================
-// STORYBOARD TABLE
+// STORYBOARD CARD
 // ==============================================
 function StoryboardCard({
   shots,
@@ -252,17 +367,22 @@ function StoryboardCard({
   isLoading?: boolean;
 }) {
   return (
-    <div className="glass-card p-5 relative group lg:col-span-2">
+    <div className="glass-card p-5 relative group lg:col-span-2 transition-all duration-200">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-          <span>🎬</span> Visual Storyboard
-        </h3>
+        <div className="flex items-center gap-2">
+          <span className="inline-block bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+            Video
+          </span>
+          <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
+            <span>🎬</span> Visual Storyboard
+          </h3>
+        </div>
         {!isLoading && onCopy && (
           <button
             onClick={onCopy}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600"
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600"
           >
-            {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
           </button>
         )}
       </div>
@@ -276,7 +396,7 @@ function StoryboardCard({
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-indigo-50">
+              <tr className="bg-purple-50">
                 <th className="px-3 py-2 text-left font-semibold text-gray-600 rounded-tl-lg">Shot</th>
                 <th className="px-3 py-2 text-left font-semibold text-gray-600">Visual</th>
                 <th className="px-3 py-2 text-left font-semibold text-gray-600 rounded-tr-lg">Audio</th>
@@ -285,7 +405,7 @@ function StoryboardCard({
             <tbody>
               {shots.map((s, i) => (
                 <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="px-3 py-2 font-medium text-indigo-600 whitespace-nowrap">{s.shot}</td>
+                  <td className="px-3 py-2 font-medium text-purple-600 whitespace-nowrap">{s.shot}</td>
                   <td className="px-3 py-2 text-gray-600">{s.visual}</td>
                   <td className="px-3 py-2 text-gray-500 italic">{s.audio}</td>
                 </tr>
@@ -299,7 +419,7 @@ function StoryboardCard({
 }
 
 // ==============================================
-// VIBE SCORE CARD
+// VIBE SCORE CARD (with circular ring + count-up)
 // ==============================================
 function VibeScoreCard({
   score,
@@ -312,41 +432,89 @@ function VibeScoreCard({
   copied?: boolean;
   isLoading?: boolean;
 }) {
-  const color = score.score <= 40 ? "text-red-500" : score.score <= 70 ? "text-yellow-500" : "text-green-500";
-  const bg = score.score <= 40 ? "bg-red-50" : score.score <= 70 ? "bg-yellow-50" : "bg-green-50";
+  const [displayScore, setDisplayScore] = useState(0);
+  const colorClass = score.score <= 40 ? "text-red-500" : score.score <= 70 ? "text-yellow-500" : "text-green-500";
+  const ringColorClass = score.score <= 40 ? "#ef4444" : score.score <= 70 ? "#eab308" : "#22c55e";
+  const bgClass = score.score <= 40 ? "bg-red-50" : score.score <= 70 ? "bg-yellow-50" : "bg-green-50";
+
+  // Count-up animation
+  useEffect(() => {
+    if (isLoading || score.score === 0) return;
+    setDisplayScore(0);
+    const duration = 1500;
+    const startTime = Date.now();
+    const target = score.score;
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayScore(Math.round(eased * target));
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    requestAnimationFrame(animate);
+  }, [score.score, isLoading]);
+
+  // Conic gradient for ring: percentage filled with color, rest gray
+  const fillDeg = (score.score / 100) * 360;
+  const ringBg = `conic-gradient(${ringColorClass} 0deg ${fillDeg}deg, #e5e7eb ${fillDeg}deg 360deg)`;
 
   return (
-    <div className="glass-card p-5 relative group lg:col-span-2">
+    <div className="glass-card p-5 relative group lg:col-span-2 transition-all duration-200">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-          <span>🔥</span> Vibe Score
-        </h3>
+        <div className="flex items-center gap-2">
+          <span className="inline-block bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+            Score
+          </span>
+          <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
+            <span>🔥</span> Vibe Score
+          </h3>
+        </div>
         {!isLoading && onCopy && (
           <button
             onClick={onCopy}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600"
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600"
           >
-            {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
           </button>
         )}
       </div>
       {isLoading ? (
         <div className="space-y-2">
-          <div className="skeleton h-12 w-20" />
+          <div className="skeleton h-24 w-24 rounded-full" />
           <div className="skeleton h-4 w-full" />
           <div className="skeleton h-4 w-5/6" />
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className={`text-5xl font-black ${color} leading-none`}>{score.score}</div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          {/* Circular progress ring with score */}
+          <div className="relative flex-shrink-0">
+            <div
+              className="w-24 h-24 rounded-full flex items-center justify-center"
+              style={{ background: ringBg }}
+            >
+              <div className="w-[80px] h-[80px] rounded-full bg-white flex items-center justify-center">
+                <span className={`text-3xl font-black ${colorClass} leading-none`}>
+                  {displayScore}
+                </span>
+              </div>
+            </div>
+            {/* "out of 100" label below */}
+            <p className="text-[10px] text-center text-gray-400 mt-1">out of 100</p>
+          </div>
+
+          {/* Label + Reasons */}
           <div className="flex-1">
-            <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${bg} ${color}`}>
+            <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${bgClass} ${colorClass}`}>
               {score.label}
             </div>
             <ul className="space-y-1">
               {score.reasons.map((r, i) => (
                 <li key={i} className="text-xs text-gray-500 flex items-start gap-2">
-                  <span className="text-indigo-400 mt-0.5">•</span>
+                  <span className="text-purple-400 mt-0.5">•</span>
                   {r}
                 </li>
               ))}
@@ -359,17 +527,29 @@ function VibeScoreCard({
 }
 
 // ==============================================
-// ERROR TOAST COMPONENT
+// ERROR TOAST
 // ==============================================
 function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-red-500 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-lg flex items-center gap-3 max-w-md">
       <AlertCircle size={16} />
       <span className="flex-1">{message}</span>
-      <button onClick={onDismiss} className="text-white/70 hover:text-white text-lg leading-none">×</button>
+      <button onClick={onDismiss} className="text-white/70 hover:text-white text-lg leading-none">
+        ×
+      </button>
     </div>
   );
 }
+
+// ==============================================
+// CONTENT TYPE OPTIONS
+// ==============================================
+const CONTENT_TYPES = [
+  { label: "💻  Produk Digital", value: "Produk Digital" },
+  { label: "🎯  Jasa/Service", value: "Jasa/Service" },
+  { label: "📅  Event/Webinar", value: "Event/Webinar" },
+  { label: "🔗  Affiliate/Review", value: "Affiliate/Review" },
+];
 
 // ==============================================
 // MAIN PAGE
@@ -378,10 +558,10 @@ export default function HomePage() {
   // ---- State ----
   const [formData, setFormData] = useState<FormData>({
     productName: "",
-    targetAudience: "",
     description: "",
     contentType: "Produk Digital",
   });
+  const [targetTags, setTargetTags] = useState<string[]>([]);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedCard, setCopiedCard] = useState<string | null>(null);
@@ -403,12 +583,23 @@ export default function HomePage() {
     setTimeout(() => setToast(null), 2000);
   }, []);
 
+  const handleLinkedInShare = () => {
+    const text = encodeURIComponent(
+      "I just generated my launch kit with FlowFOR Creative — AI-powered Smart Launch Command Center! 🚀 Try it: https://flow-for-creative.vercel.app #JuaraVibeCoding #FlowFORCreative #GeminiAI"
+    );
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fflow-for-creative.vercel.app&summary=${text}`, "_blank");
+    showToast("Opening LinkedIn...");
+  };
+
   const handleCopy = (cardKey: string, text: string) => {
     navigator.clipboard.writeText(text).catch(() => {});
     setCopiedCard(cardKey);
     showToast("Copied!");
     setTimeout(() => setCopiedCard(null), 2000);
   };
+
+  // Convert tags to comma-separated string for API
+  const targetAudienceValue = targetTags.join(", ");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -420,7 +611,10 @@ export default function HomePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          targetAudience: targetAudienceValue || formData.productName,
+        }),
       });
 
       if (!res.ok) {
@@ -438,13 +632,12 @@ export default function HomePage() {
     }
   };
 
-  // ---- PDF Export (html2canvas + jspdf) ----
+  // ---- PDF Export ----
   const handleExportPDF = async () => {
     if (!bentoGridRef.current) return;
     setIsExporting(true);
 
     try {
-      // Dynamic import so SSR doesn't try to load these
       const [html2canvasModule, jspdfModule] = await Promise.all([
         import("html2canvas"),
         import("jspdf"),
@@ -502,7 +695,7 @@ export default function HomePage() {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-indigo-600 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-lg">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-purple-600 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-lg toast-in">
           {toast}
         </div>
       )}
@@ -512,32 +705,61 @@ export default function HomePage() {
         <ErrorToast message={errorMessage} onDismiss={() => setErrorMessage(null)} />
       )}
 
-      <div className="min-h-screen bg-slate-50 py-8 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[35%_65%] gap-6 items-start">
+      <div className="min-h-screen bg-slate-50 pt-6 pb-8 px-4">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6 items-start">
 
           {/* ===== LEFT COLUMN — INPUT FORM ===== */}
-          <div className="glass-card p-6 lg:sticky lg:top-8 space-y-5">
-            {/* App Header */}
-            <div className="text-center pb-4 border-b border-white/40">
-              <div className="inline-flex items-center gap-2 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
-                  <Zap className="text-white" size={20} />
-                </div>
-                <h1 className="text-2xl font-bold gradient-text">FlowFOR Creative</h1>
+          <div className="glass-card p-6 lg:sticky lg:top-20 space-y-5 animate-slide-up">
+
+            {/* Creator Hub Section */}
+            <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+              {/* Avatar */}
+              <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                <span className="text-white text-sm font-semibold">R</span>
               </div>
-              <p className="text-sm text-gray-500">Smart Launch Command Center</p>
+              {/* Info */}
+              <div className="flex-1 leading-none">
+                <p className="text-sm font-bold text-gray-800">Creator Hub</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] text-amber-600 font-medium flex items-center gap-0.5">
+                    <Star size={11} className="fill-amber-400 text-amber-400" />
+                    Pro Plan
+                  </span>
+                </div>
+              </div>
+              {/* Gemini badge */}
+              <div className="text-[10px] font-medium text-purple-700 bg-purple-100 px-2 py-1 rounded-full">
+                Gemini AI
+              </div>
+            </div>
+
+            {/* App Title (replaces old header) */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 mb-1">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-sm">
+                  <Zap className="text-white" size={16} />
+                </div>
+                <h1 className="text-xl font-bold gradient-text">FlowFOR Creative</h1>
+              </div>
+              <p className="text-xs text-gray-400">Smart Launch Command Center</p>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
+
+              {/* Product Name */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                  Nama Produk / Campaign <span className="text-red-400">*</span>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Nama Produk / Campaign
+                  <span className="text-purple-500 ml-1">*</span>
                 </label>
                 <input
                   type="text"
                   placeholder="Contoh: Bundle Template Canva Pro"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-300"
+                  className="w-full px-4 py-3 rounded-xl border border-white/50 bg-white/70 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent
+                             transition-all duration-200 placeholder:text-gray-400 text-gray-800
+                             disabled:opacity-60"
                   value={formData.productName}
                   onChange={(e) => handleChange("productName", e.target.value)}
                   required
@@ -545,29 +767,32 @@ export default function HomePage() {
                 />
               </div>
 
+              {/* Target Audience — Tag Input */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                  Target Audiens <span className="text-red-400">*</span>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Target Audiens
+                  <span className="text-purple-500 ml-1">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: UMKM Indonesia, Content Creator muda"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-300"
-                  value={formData.targetAudience}
-                  onChange={(e) => handleChange("targetAudience", e.target.value)}
-                  required
+                <TagInput
+                  tags={targetTags}
+                  onChange={setTargetTags}
                   disabled={isLoading}
                 />
               </div>
 
+              {/* Description */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                  Deskripsi Singkat Produk <span className="text-red-400">*</span>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Deskripsi Singkat Produk
+                  <span className="text-purple-500 ml-1">*</span>
                 </label>
                 <textarea
                   placeholder="Jelaskan produk atau campaign yang ingin kamu launch..."
                   rows={4}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all placeholder:text-gray-300 resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-white/50 bg-white/70 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent
+                             transition-all duration-200 placeholder:text-gray-400 text-gray-800
+                             resize-none disabled:opacity-60"
                   value={formData.description}
                   onChange={(e) => handleChange("description", e.target.value)}
                   required
@@ -575,59 +800,84 @@ export default function HomePage() {
                 />
               </div>
 
+              {/* Content Type */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Jenis Konten</label>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Jenis Konten
+                </label>
                 <select
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all cursor-pointer"
+                  className="w-full px-4 py-3 rounded-xl border border-white/50 bg-white/70 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent
+                             transition-all duration-200 cursor-pointer text-gray-800
+                             disabled:opacity-60 appearance-none"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 12px center",
+                  }}
                   value={formData.contentType}
                   onChange={(e) => handleChange("contentType", e.target.value)}
                   disabled={isLoading}
                 >
-                  <option>Produk Digital</option>
-                  <option>Jasa/Service</option>
-                  <option>Event/Webinar</option>
-                  <option>Affiliate/Review</option>
+                  {CONTENT_TYPES.map((ct) => (
+                    <option key={ct.value} value={ct.value}>
+                      {ct.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading}
-                className="btn-gradient w-full py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={isLoading || (!formData.productName || !formData.description)}
+                className="w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2
+                           bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600
+                           text-white shadow-lg shadow-purple-200
+                           hover:from-purple-700 hover:via-purple-600 hover:to-indigo-700
+                           hover:shadow-xl hover:shadow-purple-300 hover:scale-[1.02]
+                           active:scale-[0.98]
+                           transition-all duration-200
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="animate-spin" size={16} />
-                    Generating...
+                    <Loader2 size={16} className="animate-spin" />
+                    Generating Launch Kit...
                   </>
                 ) : (
                   <>
-                    <Zap size={16} />
+                    <Sparkles size={16} />
                     Generate Launch Kit
                   </>
                 )}
               </button>
             </form>
 
-            <p className="text-center text-xs text-gray-400">Powered by Google Gemini AI</p>
+            <p className="text-center text-[11px] text-gray-400">
+              AI-powered by Google Gemini 2.5 Flash
+            </p>
           </div>
 
           {/* ===== RIGHT COLUMN — BENTO OUTPUT GRID ===== */}
-          {/* This div is the PDF export target */}
           <div ref={bentoGridRef}>
             <div className="space-y-4">
               {!result && !isLoading ? (
                 <EmptyState />
               ) : (
                 <>
-                  {/* Row 1: Sales Page (full width) */}
+                  {/* Row 1: Sales Page */}
                   <BentoCard
                     title="Sales Page Copy"
                     icon="📝"
                     colSpan="lg:col-span-2"
+                    pillBg="bg-purple-100"
+                    pillText="text-purple-700"
+                    pillLabel="Copy"
                     isLoading={isLoading}
                     copied={copiedCard === "landingPage"}
                     onCopy={() => handleCopy("landingPage", landingPageText)}
+                    className="animate-enter-1"
                     content={
                       isLoading ? null : (
                         <pre className="whitespace-pre-wrap text-xs leading-relaxed font-sans text-gray-600">
@@ -637,11 +887,15 @@ export default function HomePage() {
                     }
                   />
 
-                  {/* Row 2: Social Caption + Broadcast */}
+                  {/* Row 2: Caption + Broadcast */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <BentoCard
                       title="Social Caption"
                       icon="📱"
+                      pillBg="bg-blue-100"
+                      pillText="text-blue-700"
+                      pillLabel="Caption"
+                      className="animate-enter-2"
                       isLoading={isLoading}
                       copied={copiedCard === "caption"}
                       onCopy={() => handleCopy("caption", captionText)}
@@ -656,6 +910,10 @@ export default function HomePage() {
                     <BentoCard
                       title="Broadcast Message"
                       icon="💬"
+                      pillBg="bg-green-100"
+                      pillText="text-green-700"
+                      pillLabel="WA/TG"
+                      className="animate-enter-2"
                       isLoading={isLoading}
                       copied={copiedCard === "broadcast"}
                       onCopy={() => handleCopy("broadcast", broadcastText)}
@@ -675,53 +933,86 @@ export default function HomePage() {
                     isLoading={isLoading}
                     copied={copiedCard === "todoList"}
                     onCopy={() => handleCopy("todoList", todoListText)}
+                    className="animate-enter-3"
                   />
 
-                  {/* Row 4: Storyboard (full width) */}
-                  <StoryboardCard
-                    shots={result?.storyboard ?? []}
-                    isLoading={isLoading}
-                    copied={copiedCard === "storyboard"}
-                    onCopy={() => handleCopy("storyboard", storyboardText)}
-                  />
+                  {/* Row 4: Storyboard */}
+                  <div className="animate-enter-4">
+                    <StoryboardCard
+                      shots={result?.storyboard ?? []}
+                      isLoading={isLoading}
+                      copied={copiedCard === "storyboard"}
+                      onCopy={() => handleCopy("storyboard", storyboardText)}
+                    />
+                  </div>
 
-                  {/* Row 5: Vibe Score (full width) */}
-                  <VibeScoreCard
-                    score={result?.vibeScore ?? { score: 0, label: "", reasons: [] }}
-                    isLoading={isLoading}
-                    copied={copiedCard === "vibeScore"}
-                    onCopy={() => handleCopy("vibeScore", vibeScoreText)}
-                  />
+                  {/* Row 5: Vibe Score */}
+                  <div className="animate-enter-5">
+                    <VibeScoreCard
+                      score={result?.vibeScore ?? { score: 0, label: "", reasons: [] }}
+                      isLoading={isLoading}
+                      copied={copiedCard === "vibeScore"}
+                      onCopy={() => handleCopy("vibeScore", vibeScoreText)}
+                    />
+                  </div>
 
-                  {/* Action Buttons */}
+                  {/* Action Bar */}
                   {result && (
-                    <div className="flex gap-4 flex-wrap">
-                      <button
-                        onClick={handleExportPDF}
-                        disabled={isExporting}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-indigo-400 text-indigo-600 font-semibold text-sm hover:bg-indigo-50 transition-all disabled:opacity-60"
-                      >
-                        {isExporting ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                          <FileText size={16} />
-                        )}
-                        {isExporting ? "Exporting..." : "Export as PDF"}
-                      </button>
-                      <button
-                        onClick={() => setShowMobilePreview(true)}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-purple-400 text-purple-600 font-semibold text-sm hover:bg-purple-50 transition-all"
-                      >
-                        <Smartphone size={16} />
-                        Preview Mobile Mockup
-                      </button>
+                    <div className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-enter-6">
+                      {/* Left: Branding */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+                          <Zap className="text-white" size={13} />
+                        </div>
+                        <div>
+                          <p className="text-[12px] font-semibold text-gray-700">FlowFOR Creative</p>
+                          <p className="text-[11px] text-gray-400">© 2026 · Smart Launch Command Center</p>
+                        </div>
+                      </div>
+
+                      {/* Right: Action Buttons */}
+                      <div className="flex gap-3 flex-wrap">
+                        <button
+                          onClick={handleExportPDF}
+                          disabled={isExporting}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-purple-300
+                                     text-purple-600 font-semibold text-sm hover:bg-purple-50
+                                     active:scale-95 transition-all duration-200
+                                     disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isExporting ? (
+                            <Loader2 size={15} className="animate-spin" />
+                          ) : (
+                            <Download size={15} />
+                          )}
+                          {isExporting ? "Exporting..." : "Export PDF"}
+                        </button>
+
+                        <button
+                          onClick={() => setShowMobilePreview(true)}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-indigo-300
+                                     text-indigo-600 font-semibold text-sm hover:bg-indigo-50
+                                     active:scale-95 transition-all duration-200"
+                        >
+                          <Smartphone size={15} />
+                          Preview Mobile
+                        </button>
+
+                        <button
+                          onClick={handleLinkedInShare}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold text-sm
+                                     hover:bg-blue-700 active:scale-95 transition-all duration-200 shadow-sm"
+                        >
+                          <Share2 size={15} />
+                          Share to LinkedIn
+                        </button>
+                      </div>
                     </div>
                   )}
                 </>
               )}
             </div>
           </div>
-          {/* End bento grid */}
 
         </div>
       </div>
