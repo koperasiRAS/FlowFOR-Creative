@@ -1,26 +1,17 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Search, Sun, Moon, Zap } from "lucide-react";
+import { Search, Sun, Moon } from "lucide-react";
+import Image from "next/image";
+import { useSettings } from "./SettingsContext";
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
 }
 
 export default function Navbar({ onSearch }: NavbarProps) {
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggleTheme } = useSettings();
   const [searchQuery, setSearchQuery] = useState("");
-
-  const toggleTheme = () => {
-    const html = document.documentElement;
-    if (isDark) {
-      html.classList.remove("dark");
-      setIsDark(false);
-    } else {
-      html.classList.add("dark");
-      setIsDark(true);
-    }
-  };
 
   const handleSearch = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +24,7 @@ export default function Navbar({ onSearch }: NavbarProps) {
 
   return (
     <nav
-      className="sticky top-0 z-50 w-full h-[60px] border-b transition-colors duration-300"
+      className="sticky top-0 z-50 w-full h-16 border-b transition-colors duration-300"
       style={{
         background: isDark
           ? "rgba(10, 9, 24, 0.95)"
@@ -47,30 +38,26 @@ export default function Navbar({ onSearch }: NavbarProps) {
     >
       <div className="h-full flex items-center">
 
-        {/* ── LEFT: Brand (fixed 240px, aligned with sidebar) ── */}
+        {/* ── LEFT: Brand (flexible width on mobile, fixed 240px on desktop) ── */}
         <div
-          className="w-60 flex-shrink-0 flex items-center gap-3 px-4 h-full border-r"
+          className="w-auto md:w-60 flex-shrink-0 flex items-center gap-2 md:gap-3 px-3 md:px-4 h-full border-r-0 md:border-r"
           style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(139,92,246,0.12)" }}
         >
           {/* Logo Icon Box */}
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #7C3AED, #4F46E5)",
-              boxShadow: "0 2px 8px rgba(124,58,237,0.30)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Zap size={18} color="white" fill="white" />
+          <div className="flex-shrink-0 flex items-center justify-center mr-1">
+            <Image 
+              src={isDark ? "/logo_white.png" : "/logo_new.png"} 
+              alt="Logo" 
+              width={56} 
+              height={56} 
+              className="object-contain"
+              priority
+            />
           </div>
 
-          {/* Brand name */}
+          {/* Brand name — hidden on very small mobile, visible on tablet/desktop */}
           <span
+            className="hidden sm:block"
             style={{
               fontWeight: 700,
               fontSize: "17px",
@@ -88,7 +75,7 @@ export default function Navbar({ onSearch }: NavbarProps) {
         </div>
 
         {/* ── CENTER: Search bar (truly centered in remaining space) ── */}
-        <div className="flex-1 flex items-center justify-center px-6">
+        <div className="flex-1 flex items-center justify-center px-2 md:px-6 min-w-0">
           <div className="relative w-full max-w-[380px]">
             <Search
               size={14}
@@ -133,11 +120,11 @@ export default function Navbar({ onSearch }: NavbarProps) {
         </div>
 
         {/* ── RIGHT: Theme Toggle ── */}
-        <div className="flex items-center gap-3 pr-5 flex-shrink-0">
-
-          {/* Sun icon OUTSIDE (left of track) */}
+        <div className="flex items-center gap-2 md:gap-3 pr-3 md:pr-5 flex-shrink-0">
+          {/* Sun icon OUTSIDE — hidden on mobile */}
           <Sun
             size={15}
+            className="hidden sm:block"
             style={{ color: isDark ? "#374151" : "#f59e0b", flexShrink: 0, transition: "color 0.3s" }}
           />
 
@@ -181,9 +168,10 @@ export default function Navbar({ onSearch }: NavbarProps) {
             />
           </button>
 
-          {/* Moon icon OUTSIDE (right of track) */}
+          {/* Moon icon OUTSIDE — hidden on mobile */}
           <Moon
             size={15}
+            className="hidden sm:block"
             style={{ color: isDark ? "#818cf8" : "#d1d5db", flexShrink: 0, transition: "color 0.3s" }}
           />
 

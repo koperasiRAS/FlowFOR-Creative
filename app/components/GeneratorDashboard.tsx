@@ -13,6 +13,7 @@ import {
   Share2,
   Download,
 } from "lucide-react";
+import Image from "next/image";
 
 import ContentCalendar from "./ContentCalendar";
 import { useSettings } from "./SettingsContext";
@@ -833,7 +834,7 @@ export default function GeneratorDashboard({
   initialResult,
   onGenerateSuccess,
 }: GeneratorDashboardProps = {}) {
-  const { settings, updateSettings } = useSettings();
+  const { settings, updateSettings, isDark } = useSettings();
   
   // ---- State ----
   const [formData, setFormData] = useState<FormData>({
@@ -1029,14 +1030,14 @@ export default function GeneratorDashboard({
         <ErrorToast message={errorMessage} onDismiss={() => setErrorMessage(null)} />
       )}
 
-      <div className="min-h-screen bg-transparent pt-6 pb-8 px-4 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6 items-start">
+      <div className="min-h-screen bg-transparent pt-3 md:pt-6 pb-8 px-3 md:px-4 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[38%_62%] gap-4 md:gap-6 items-start">
 
           {/* ===== LEFT COLUMN — INPUT FORM ===== */}
-          <div className="glass-card p-6 lg:sticky lg:top-20 space-y-5 animate-slide-up">
+          <div className="glass-card p-4 md:p-6 lg:sticky lg:top-20 space-y-4 md:space-y-5 animate-slide-up">
 
             {/* Welcome Banner */}
-            <div className="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-white/10">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-gray-100 dark:border-white/10">
               <div className="flex-1">
                 <p className="text-sm font-bold text-gray-800 dark:text-gray-100">
                   👋 Selamat datang di FlowFOR Creative!
@@ -1360,19 +1361,14 @@ export default function GeneratorDashboard({
                     <div className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-enter-7">
                       {/* Left: Branding */}
                       <div className="flex items-center gap-2">
-                        <div
-                          style={{
-                            width: "28px",
-                            height: "28px",
-                            borderRadius: "8px",
-                            background: "linear-gradient(135deg, #7C3AED, #4F46E5)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Zap size={14} color="white" fill="white" />
+                        <div className="flex-shrink-0 flex items-center justify-center">
+                          <Image 
+                            src={isDark ? "/logo_white.png" : "/logo_new.png"} 
+                            alt="Logo" 
+                            width={44} 
+                            height={44} 
+                            className="object-contain"
+                          />
                         </div>
                         <div>
                           <p className="text-[12px] font-bold text-gray-800 dark:text-gray-100 leading-none">FlowFOR Creative</p>

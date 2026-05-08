@@ -133,7 +133,7 @@ export default function SidebarWrapper({ searchQuery = "" }: { searchQuery?: str
   };
 
   return (
-    <div className="flex" style={{ minHeight: "calc(100vh - 3.5rem)" }}>
+    <div className="flex" style={{ minHeight: "calc(100vh - 4rem)" }}>
       <Sidebar activePanel={activePanel} onPanelChange={setActivePanel} onNewCampaign={handleNewCampaign} />
       <main className="flex-1 min-w-0 pb-20 md:pb-0">{renderPanel()}</main>
     </div>
