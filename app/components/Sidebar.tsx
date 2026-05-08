@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import Image from "next/image";
 
 export type ActivePanel =
   | "dashboard"
@@ -58,28 +57,6 @@ export default function Sidebar({ activePanel, onPanelChange, onNewCampaign }: S
           )}
         </button>
 
-        {/* Top: Creator Hub (Logo) */}
-        <div className={`p-4 border-b border-black/5 dark:border-white/10 ${collapsed ? "flex justify-center" : ""}`}>
-        {collapsed ? (
-            <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-              <Image src="/logo2.png" alt="FlowFOR Creative Logo" width={32} height={32} className="object-contain" />
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                <Image src="/logo2.png" alt="FlowFOR Creative Logo" width={40} height={40} className="object-contain" />
-              </div>
-              <div className="flex-1 leading-none overflow-hidden">
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">
-                  FlowFOR Creative
-                </p>
-                <span className="text-[10px] font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                  Powered by Gemini
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* New Campaign Button */}
         <div className={`p-3 border-b border-black/5 ${collapsed ? "flex justify-center" : ""}`}>

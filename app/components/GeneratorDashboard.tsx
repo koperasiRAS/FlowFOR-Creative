@@ -485,10 +485,10 @@ function StoryboardCard({
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-purple-50">
-                <th className="px-3 py-2 text-left font-semibold text-gray-600 rounded-tl-lg">Shot</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-600">Visual</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-600 rounded-tr-lg">Audio</th>
+              <tr className="bg-red-50/80 dark:bg-red-950/20">
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-red-700/80 dark:text-red-400 uppercase tracking-widest rounded-tl-xl border-b border-red-100 dark:border-red-900/30">Shot</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-red-700/80 dark:text-red-400 uppercase tracking-widest border-b border-red-100 dark:border-red-900/30">Visual</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-red-700/80 dark:text-red-400 uppercase tracking-widest rounded-tr-xl border-b border-red-100 dark:border-red-900/30">Audio</th>
               </tr>
             </thead>
             <tbody>
@@ -577,11 +577,11 @@ function ShootScriptCard({
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-cyan-50">
-                <th className="px-3 py-2 text-left font-semibold text-gray-600 rounded-tl-lg">Scene</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-600">Action</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-600">Dialogue</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-600 rounded-tr-lg">Camera</th>
+              <tr className="bg-cyan-50/80 dark:bg-cyan-950/20">
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest rounded-tl-xl border-b border-cyan-100 dark:border-cyan-900/30">Scene</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest border-b border-cyan-100 dark:border-cyan-900/30">Action</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest border-b border-cyan-100 dark:border-cyan-900/30">Dialogue</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest rounded-tr-xl border-b border-cyan-100 dark:border-cyan-900/30">Camera</th>
               </tr>
             </thead>
             <tbody>
@@ -1360,12 +1360,23 @@ export default function GeneratorDashboard({
                     <div className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-enter-7">
                       {/* Left: Branding */}
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
-                          <Zap className="text-white" size={13} />
+                        <div
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "8px",
+                            background: "linear-gradient(135deg, #7C3AED, #4F46E5)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Zap size={14} color="white" fill="white" />
                         </div>
                         <div>
-                          <p className="text-[12px] font-semibold text-gray-700">FlowFOR Creative</p>
-                          <p className="text-[11px] text-gray-400">© 2026 · Smart Launch Command Center</p>
+                          <p className="text-[12px] font-bold text-gray-800 dark:text-gray-100 leading-none">FlowFOR Creative</p>
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">© 2026 · Smart Launch Command Center</p>
                         </div>
                       </div>
 

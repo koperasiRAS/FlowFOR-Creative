@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Search, Sun, Moon } from "lucide-react";
-import Image from "next/image";
+import { Search, Sun, Moon, Zap } from "lucide-react";
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
@@ -53,43 +52,39 @@ export default function Navbar({ onSearch }: NavbarProps) {
           className="w-60 flex-shrink-0 flex items-center gap-3 px-4 h-full border-r"
           style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(139,92,246,0.12)" }}
         >
-          {/* Logo */}
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-            style={{ background: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.08)" }}
+          {/* Logo Icon Box */}
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #7C3AED, #4F46E5)",
+              boxShadow: "0 2px 8px rgba(124,58,237,0.30)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
           >
-            <Image
-              src="/logo2.png"
-              alt="FlowFOR Creative"
-              width={32}
-              height={32}
-              className="object-contain"
-              priority
-            />
+            <Zap size={18} color="white" fill="white" />
           </div>
 
-          {/* Brand text */}
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <span
-              className="text-[14px] font-extrabold tracking-tight leading-none truncate"
-              style={{
-                background: "linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              FlowFOR Creative
-            </span>
-            <span
-              className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-full w-fit whitespace-nowrap"
-              style={{
-                background: isDark ? "rgba(124,58,237,0.20)" : "rgba(124,58,237,0.10)",
-                color: isDark ? "#c4b5fd" : "#7c3aed",
-              }}
-            >
-              ✦ Powered by Gemini
-            </span>
-          </div>
+          {/* Brand name */}
+          <span
+            style={{
+              fontWeight: 700,
+              fontSize: "17px",
+              background: "linear-gradient(135deg, #7C3AED, #4F46E5)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              letterSpacing: "-0.3px",
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+            }}
+          >
+            FlowFOR Creative
+          </span>
         </div>
 
         {/* ── CENTER: Search bar (truly centered in remaining space) ── */}

@@ -88,7 +88,7 @@ export default function ContentCalendar({
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
                 <div
                   key={d}
-                  className="text-center text-[10px] font-semibold text-gray-400 py-1"
+                  className="text-center text-[10px] font-bold text-purple-600/70 dark:text-purple-400/70 py-1.5 uppercase tracking-widest bg-purple-50/50 dark:bg-purple-900/10 rounded-md mb-1"
                 >
                   {d}
                 </div>
