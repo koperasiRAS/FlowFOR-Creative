@@ -67,6 +67,12 @@ export default function SidebarWrapper() {
     setActivePanel("dashboard");
   }, []);
 
+  // When New Campaign is clicked → clear result + switch to dashboard
+  const handleNewCampaign = useCallback(() => {
+    setSelectedCampaign(null);
+    setActivePanel("dashboard");
+  }, []);
+
   // When GeneratorDashboard completes a generate → save to history
   const handleGenerateSuccess = useCallback(
     (data: GenerateResult, productName: string, targetAudience: string, contentType: string) => {
@@ -111,7 +117,7 @@ export default function SidebarWrapper() {
 
   return (
     <div className="flex" style={{ minHeight: "calc(100vh - 3.5rem)" }}>
-      <Sidebar activePanel={activePanel} onPanelChange={setActivePanel} />
+      <Sidebar activePanel={activePanel} onPanelChange={setActivePanel} onNewCampaign={handleNewCampaign} />
       <main className="flex-1 min-w-0 pb-20 md:pb-0">{renderPanel()}</main>
     </div>
   );

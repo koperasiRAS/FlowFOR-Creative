@@ -9,8 +9,6 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
-  Sun,
-  Moon,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -22,6 +20,7 @@ export type ActivePanel =
 interface SidebarProps {
   activePanel: ActivePanel;
   onPanelChange: (panel: ActivePanel) => void;
+  onNewCampaign: () => void;
 }
 
 const NAV_ITEMS: {
@@ -34,19 +33,8 @@ const NAV_ITEMS: {
   { id: "settings", icon: Settings, label: "Settings" },
 ];
 
-export default function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
+export default function Sidebar({ activePanel, onPanelChange, onNewCampaign }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [isDark, setIsDark] = useState(false);
-
-  const toggleTheme = () => {
-    if (isDark) {
-      document.documentElement.classList.remove("dark");
-      setIsDark(false);
-    } else {
-      document.documentElement.classList.add("dark");
-      setIsDark(true);
-    }
-  };
 
   return (
     <>
@@ -107,6 +95,7 @@ export default function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
               className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center
                          shadow-md hover:bg-purple-700 active:scale-95 transition-all duration-200"
               title="New Campaign"
+              onClick={onNewCampaign}
             >
               <Sparkles size={16} />
             </button>
@@ -114,7 +103,7 @@ export default function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
             <button
               className="w-full h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center gap-2
                          shadow-md hover:bg-purple-700 active:scale-95 transition-all duration-200 font-semibold text-sm"
-              onClick={() => onPanelChange("dashboard")}
+              onClick={onNewCampaign}
             >
               <Sparkles size={15} />
               New Campaign
@@ -151,17 +140,7 @@ export default function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
           })}
         </nav>
 
-        {/* Bottom Actions (Theme Toggle) */}
-        <div className="p-2 border-t border-black/5 dark:border-white/10 flex justify-center">
-          <button
-            onClick={toggleTheme}
-            className={`flex items-center justify-center p-2 rounded-xl transition-all duration-200 group bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 w-full ${collapsed ? "" : "gap-2"}`}
-            title="Toggle Theme"
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            {!collapsed && <span className="text-sm font-medium">{isDark ? "Light Mode" : "Dark Mode"}</span>}
-          </button>
-        </div>
+
       </aside>
 
       {/* Mobile Bottom Tab Bar */}

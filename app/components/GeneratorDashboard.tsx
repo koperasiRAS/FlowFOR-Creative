@@ -13,7 +13,6 @@ import {
   X,
   Share2,
   Download,
-  FileText,
 } from "lucide-react";
 
 import ContentCalendar from "./ContentCalendar";
@@ -429,14 +428,19 @@ function StoryboardCard({
   isLoading?: boolean;
   productName?: string;
 }) {
-  const handleGoogleDocs = () => {
+  const handleDownloadDoc = () => {
     if (!shots.length) return;
     const content = shots
       .map((s, i) => `SHOT ${i + 1}: ${s.shot}\nVisual: ${s.visual}\nAudio: ${s.audio}`)
       .join("\n\n");
-    const header = `VISUAL STORYBOARD — ${productName || ""}\n\n`;
-    navigator.clipboard.writeText(header + content).catch(() => {});
-    window.open("https://docs.google.com/document/create", "_blank");
+    const text = `VISUAL STORYBOARD — ${productName || ""}\n${'='.repeat(60)}\n\n${content}`;
+    const blob = new Blob([text], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Storyboard-${(productName || "Campaign").replace(/[^a-zA-Z0-9]/g, "-")}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -453,13 +457,13 @@ function StoryboardCard({
         <div className="flex items-center gap-1">
           {!isLoading && (
             <button
-              onClick={handleGoogleDocs}
+              onClick={handleDownloadDoc}
               className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2.5 py-1.5 rounded-lg
                          border border-green-300 text-green-600 hover:bg-green-50 text-xs font-medium flex items-center gap-1"
-              title="Buka di Google Docs"
+              title="Download Storyboard .doc"
             >
-              <FileText size={12} className="text-green-600" />
-              <span>Buka di Google Docs</span>
+              <Download size={12} className="text-green-600" />
+              <span>Download .doc</span>
             </button>
           )}
           {!isLoading && onCopy && (
@@ -515,15 +519,35 @@ function ShootScriptCard({
   script?: ShootScriptData;
   isLoading: boolean;
 }) {
+  const handleDownloadDoc = () => {
+    if (!script) return;
+    const header = `SHOOT SCRIPT\nFormat: ${script.format} | Duration: ${script.duration}\n${'='.repeat(60)}\n\n`;
+    const scenes = script.scenes
+      .map((s, i) => `SCENE ${i + 1}: ${s.scene}\nAction: ${s.action}\nDialogue: ${s.dialogue}\nCamera: ${s.camera}`)
+      .join("\n\n");
+    const tips = script.tips && script.tips.length > 0
+      ? `\n\n${'='.repeat(60)}\nPRODUCTION TIPS\n${script.tips.map(t => `• ${t}`).join("\n")}`
+      : "";
+    const blob = new Blob([header + scenes + tips], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Shoot-Script.doc";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="glass-card p-5 transition-all duration-200 lg:col-span-2">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="inline-block bg-cyan-100 text-cyan-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-          Script
-        </span>
-        <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
-          <span>🎬</span> Shoot Script
-        </h3>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="inline-block bg-cyan-100 text-cyan-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+            Script
+          </span>
+          <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
+            <span>🎬</span> Shoot Script
+          </h3>
+        </div>
         {!isLoading && script && (
           <div className="ml-auto flex items-center gap-2">
             <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
@@ -532,6 +556,14 @@ function ShootScriptCard({
             <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
               {script.duration}
             </span>
+            <button
+              onClick={handleDownloadDoc}
+              className="px-2.5 py-1.5 rounded-lg border border-cyan-300 text-cyan-600 hover:bg-cyan-50 text-xs font-medium flex items-center gap-1 transition-all"
+              title="Download Shoot Script .doc"
+            >
+              <Download size={12} />
+              <span>Download .doc</span>
+            </button>
           </div>
         )}
       </div>
@@ -711,8 +743,13 @@ function SalesPageCard({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  // Parse bullet points
-  const lines = landingPage.split("\n").filter((l) => l.trim());
+  // Strip HTML tags so AI output never leaks raw HTML like </li><li>
+  const cleanText = landingPage.replace(/<[^>]*>/g, "").replace(/&[a-z]+;/gi, (m) => {
+    const entities: Record<string, string> = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&nbsp;": " " };
+    return entities[m] ?? m;
+  });
+
+  const lines = cleanText.split("\n").filter((l) => l.trim());
   const firstThree = lines.slice(0, 3);
   const hasMore = lines.length > 3;
 
@@ -745,7 +782,7 @@ function SalesPageCard({
       ) : (
         <div>
           <pre className="whitespace-pre-wrap text-xs leading-relaxed font-sans text-gray-600">
-            {(expanded || !hasMore) ? landingPage : firstThree.join("\n")}
+            {(expanded || !hasMore) ? cleanText : firstThree.join("\n")}
           </pre>
           {hasMore && (
             <button
@@ -812,8 +849,7 @@ export default function GeneratorDashboard({
   const [toast, setToast] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  
+
   // Dynamic Loading Text
   const [loadingTextIndex, setLoadingTextIndex] = useState(0);
   const loadingTexts = [
@@ -835,7 +871,7 @@ export default function GeneratorDashboard({
     return () => clearInterval(interval);
   }, [isLoading, loadingTexts.length]);
 
-  // Ref for bento grid (PDF export target)
+  // Ref for bento grid
   const bentoGridRef = useRef<HTMLDivElement>(null);
 
   // ---- Handlers ----
@@ -913,45 +949,6 @@ export default function GeneratorDashboard({
     }
   };
 
-  // ---- PDF Export ----
-  const handleExportPDF = async () => {
-    if (!bentoGridRef.current) return;
-    setIsExporting(true);
-
-    try {
-      const [html2canvasModule, jspdfModule] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
-      ]);
-      const html2canvas = html2canvasModule.default;
-      const { jsPDF } = jspdfModule;
-
-      const element = bentoGridRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#f8fafc",
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: [canvas.width / 2, canvas.height / 2],
-      });
-
-      const filename = `FlowFOR-Campaign-${(formData.productName || "Launch").replace(/[^a-zA-Z0-9]/g, "-")}.pdf`;
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
-      pdf.save(filename);
-      showToast("PDF downloaded!");
-    } catch (err) {
-      console.error("PDF export error:", err);
-      setErrorMessage("Failed to export PDF. Please try again.");
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   // ---- Derived content strings for copy ----
   const landingPageText = result?.landingPage ?? "";
@@ -1336,21 +1333,6 @@ export default function GeneratorDashboard({
 
                       {/* Right: Action Buttons */}
                       <div className="flex gap-3 flex-wrap">
-                        <button
-                          onClick={handleExportPDF}
-                          disabled={isExporting}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-purple-300
-                                     text-purple-600 font-semibold text-sm hover:bg-purple-50
-                                     active:scale-95 transition-all duration-200
-                                     disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isExporting ? (
-                            <Loader2 size={15} className="animate-spin" />
-                          ) : (
-                            <Download size={15} />
-                          )}
-                          {isExporting ? "Exporting..." : "Export PDF"}
-                        </button>
 
                         <button
                           onClick={() => setShowMobilePreview(true)}
