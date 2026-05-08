@@ -16,10 +16,19 @@
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 30%, #e0e7ff 60%, #f0f4ff 100%);
+  background: linear-gradient(
+    135deg,
+    #ede9fe 0%,
+    #ddd6fe 20%,
+    #c4b5fd 35%,
+    #e0e7ff 55%,
+    #ede9fe 75%,
+    #f5f3ff 100%
+  );
+  background-attachment: fixed;
   min-height: 100vh;
   color: rgb(var(--foreground-rgb));
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background 0.4s ease, color 0.3s ease;
 }
 
 .dark body {
