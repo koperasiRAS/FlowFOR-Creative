@@ -942,8 +942,21 @@ export default function GeneratorDashboard({
       // Notify parent to save to history
       onGenerateSuccess?.(data, formData.productName, targetAudienceValue, formData.contentType);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
-      setErrorMessage(msg);
+      const rawMsg = err instanceof Error ? err.message : "";
+      // Map common errors to friendly Indonesian messages
+      let friendlyMsg = "Terjadi kesalahan. Silakan coba lagi.";
+      if (rawMsg.includes("429") || rawMsg.toLowerCase().includes("quota")) {
+        friendlyMsg = "⚠️ Batas penggunaan AI tercapai. Tunggu sebentar lalu coba lagi.";
+      } else if (rawMsg.includes("500") || rawMsg.includes("503")) {
+        friendlyMsg = "⚠️ Server sedang sibuk. Silakan coba dalam beberapa detik.";
+      } else if (rawMsg.toLowerCase().includes("network") || rawMsg.toLowerCase().includes("fetch")) {
+        friendlyMsg = "🌐 Koneksi internet bermasalah. Periksa jaringan kamu dan coba lagi.";
+      } else if (rawMsg.includes("timeout") || rawMsg.includes("DEADLINE")) {
+        friendlyMsg = "⏱️ AI terlalu lama merespons. Coba sederhanakan deskripsi produk kamu.";
+      } else if (rawMsg.length > 0) {
+        friendlyMsg = `⚠️ ${rawMsg}`;
+      }
+      setErrorMessage(friendlyMsg);
     } finally {
       setIsLoading(false);
     }
@@ -973,9 +986,19 @@ export default function GeneratorDashboard({
         <div className="absolute bottom-[-4rem] left-1/2 -translate-x-1/2 w-80 h-80 bg-indigo-200/20 rounded-full blur-3xl" />
       </div>
 
+      {/* Progress Bar — shown during loading */}
+      {isLoading && (
+        <div className="fixed top-14 left-0 right-0 z-50">
+          <div className="progress-bar-track" style={{ borderRadius: 0 }}>
+            <div className="progress-bar-fill" />
+          </div>
+        </div>
+      )}
+
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-purple-600 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-lg toast-in">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-purple-600 text-white px-5 py-2.5 rounded-full text-sm font-medium shadow-lg toast-in flex items-center gap-2">
+          <span className="pulse-dot" />
           {toast}
         </div>
       )}
@@ -1175,14 +1198,15 @@ export default function GeneratorDashboard({
               <button
                 type="submit"
                 disabled={isLoading || (!formData.productName || !formData.description)}
-                className="w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2
+                className={`w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2
                            bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600
                            text-white shadow-lg shadow-purple-200
                            hover:from-purple-700 hover:via-purple-600 hover:to-indigo-700
                            hover:shadow-xl hover:shadow-purple-300 hover:scale-[1.02]
                            active:scale-[0.98]
                            transition-all duration-200
-                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+                           ${!isLoading && formData.productName && formData.description ? 'btn-generate-glow' : ''}`}
               >
                 {isLoading ? (
                   <>

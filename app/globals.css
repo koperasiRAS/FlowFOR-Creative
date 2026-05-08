@@ -23,8 +23,7 @@ body {
 }
 
 .dark body {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #1e1b4b 60%, #0f172a 100%); /* Add dark mode equivalent if needed, but keeping simple for now. Actually user didn't mention dark mode gradient. I'll just keep dark mode as is or adapt it gently. I will stick to what the user said for the body, but keep .dark body to prevent breaking the dark mode button. */
-  background-color: #0f172a;
+  background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 40%, #0f172a 100%);
   color: #f8fafc;
 }
 
@@ -229,3 +228,112 @@ body {
 .toast-in {
   animation: toastIn 0.25s ease-out;
 }
+
+/* ==============================================
+   PROGRESS BAR
+   ============================================== */
+@keyframes progress-indeterminate {
+  0%   { transform: translateX(-100%) scaleX(0.5); }
+  50%  { transform: translateX(0%)   scaleX(0.8); }
+  100% { transform: translateX(100%) scaleX(0.5); }
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #7c3aed 0%, #a78bfa 50%, #6366f1 100%);
+  background-size: 200% 100%;
+  animation: progress-indeterminate 1.6s ease-in-out infinite;
+  border-radius: 99px;
+}
+
+/* ==============================================
+   PULSE DOT (live indicator)
+   ============================================== */
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.4); }
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7c3aed;
+  animation: pulseDot 1s ease-in-out infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ==============================================
+   GENERATE BUTTON GLOW
+   ============================================== */
+@keyframes btnGlow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(124,58,237,0.3); }
+  50%       { box-shadow: 0 4px 32px rgba(124,58,237,0.55); }
+}
+
+.btn-generate-glow {
+  animation: btnGlow 2s ease-in-out infinite;
+}
+
+/* ==============================================
+   MOBILE RESPONSIVE FIXES
+   ============================================== */
+@media (max-width: 768px) {
+  .glass-card {
+    border-radius: 16px;
+    padding: 1rem !important;
+  }
+
+  .form-input {
+    font-size: 16px; /* prevents zoom on iOS */
+  }
+
+  body {
+    background: linear-gradient(160deg, #f5f3ff 0%, #ede9fe 50%, #e0e7ff 100%);
+  }
+}
+
+/* ==============================================
+   DARK MODE IMPROVEMENTS
+   ============================================== */
+.dark .form-input {
+  background: #1e293b;
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #f1f5f9;
+}
+
+.dark .form-input::placeholder {
+  color: #64748b;
+}
+
+.dark .form-input:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 25%,
+    #334155 50%,
+    #1e293b 75%
+  );
+  background-size: 200% 100%;
+}
+
+
+/* ==============================================
+   ANIMATE ENTER 7 (action bar)
+   ============================================== */
+.animate-enter-7 { animation: slideUpFadeFast 0.4s ease-out 0.47s both; }

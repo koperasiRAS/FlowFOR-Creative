@@ -101,7 +101,6 @@ export default function SidebarWrapper() {
         return (
           <SettingsPanel
             onBack={() => setActivePanel("dashboard")}
-            onSettingsChange={updateSettings}
           />
         );
       case "dashboard":
