@@ -1582,7 +1582,17 @@ export default function GeneratorDashboard({
                     />
                   </div>
 
-                  {/* Row 6: Vibe Score */}
+                  {/* Row 6: Content Calendar */}
+                  {result?.contentCalendar && result.contentCalendar.length > 0 && (
+                    <div className="animate-enter-5">
+                      <ContentCalendar
+                        productName={formData.productName}
+                        calendarData={result.contentCalendar}
+                      />
+                    </div>
+                  )}
+
+                  {/* Row 7: Vibe Score */}
                   <div className="animate-enter-5">
                     <VibeScoreCard
                       score={result?.vibeScore ?? { score: 0, label: "", reasons: [] }}

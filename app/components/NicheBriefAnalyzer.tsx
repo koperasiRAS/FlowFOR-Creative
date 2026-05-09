@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Target, TrendingUp, AlertTriangle, Zap, CheckCircle2, Loader2, ChevronDown, ChevronUp, ExternalLink, Globe } from "lucide-react";
+import { Target, TrendingUp, Zap, CheckCircle2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useSettings } from "./SettingsContext";
 
 interface NicheBriefData {
@@ -12,15 +12,6 @@ interface NicheBriefData {
     monetization: string;
     opportunity: string;
   };
-  competitors: {
-    platform: string;
-    username: string;
-    displayName: string;
-    followerCount: string;
-    contentTheme: string;
-    whyFollow: string;
-    contentStrength: string;
-  }[];
   contentPatterns: {
     pattern: string;
     description: string;
@@ -38,13 +29,6 @@ interface NicheBriefData {
   overallScore: number;
   entryDifficulty: string;
 }
-
-const PLATFORM_COLOR: Record<string, { bg: string; text: string }> = {
-  Instagram: { bg: "bg-pink-100 text-pink-700", text: "text-pink-500" },
-  TikTok: { bg: "bg-black text-white", text: "text-black" },
-  YouTube: { bg: "bg-red-100 text-red-700", text: "text-red-500" },
-  WhatsApp: { bg: "bg-green-100 text-green-700", text: "text-green-500" },
-};
 
 const VIRALITY_COLOR: Record<string, string> = {
   Tinggi: "bg-green-100 text-green-700",
@@ -106,7 +90,7 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "competitors" | "patterns" | "strategy">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "patterns" | "strategy">("overview");
   const [toast, setToast] = useState<string | null>(null);
 
   // Auto-fill niche from campaign props
@@ -245,7 +229,7 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
 
           {/* Tabs */}
           <div className="flex items-center gap-1 bg-gray-50 dark:bg-slate-800/50 rounded-xl p-1 overflow-x-auto">
-            {(["overview", "competitors", "patterns", "strategy"] as const).map((tab) => (
+            {(["overview", "patterns", "strategy"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -256,9 +240,8 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
                 }`}
               >
                 {tab === "overview" ? "📋 Overview"
-                  : tab === "competitors" ? "👥 Competitors"
-                    : tab === "patterns" ? "📊 Patterns"
-                      : "🎯 Strategy"}
+                  : tab === "patterns" ? "📊 Patterns"
+                    : "🎯 Strategy"}
               </button>
             ))}
           </div>
@@ -280,55 +263,6 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {activeTab === "competitors" && (
-            <div className="animate-slide-up space-y-2">
-              {result.competitors?.map((c, i) => {
-                const meta = PLATFORM_COLOR[c.platform] ?? { bg: "bg-gray-100", text: "text-gray-600" };
-                return (
-                  <div key={i} className="flex items-start gap-3 p-3 bg-gray-50/50 dark:bg-slate-800/50 rounded-xl">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${meta.bg}`}>{c.platform}</span>
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-200">@{c.username}</span>
-                        <span className="text-[10px] text-gray-400">{c.displayName}</span>
-                      </div>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                        {c.followerCount} · <span className="text-violet-600 dark:text-violet-400">{c.contentTheme}</span>
-                      </p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 italic">
-                        {`"${c.whyFollow}"`}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => copyToClipboard(c.username, "Username")}
-                      className="text-[9px] text-violet-500 hover:text-violet-700 font-medium flex-shrink-0"
-                    >
-                      Copy
-                    </button>
-                    <a
-                      href={(() => {
-                        const username = c.username;
-                        // If it's already a full URL, use it
-                        if (username.startsWith("http")) return username;
-                        const base = c.platform.toLowerCase();
-                        // YouTube uses /@username format
-                        if (base === "youtube") return `https://youtube.com/@${username.replace(/^@/, "")}`;
-                        return `https://${base}.com/${username}`;
-                      })()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-[9px] text-indigo-500 hover:text-indigo-700 font-medium flex items-center gap-0.5 flex-shrink-0"
-                      title={`Buka @${c.username} di ${c.platform}`}
-                    >
-                      <Globe size={9} /> Profil
-                    </a>
-                  </div>
-                );
-              })}
             </div>
           )}
 

@@ -36,15 +36,13 @@ function checkRateLimit(ip: string): boolean {
 const NICHE_BRIEF_SYSTEM_PROMPT = `Kamu adalah Social Media Intelligence Analyst yang spesialis dalam competitive analysis untuk konten kreator Indonesia.
 
 TUGAS UTAMA:
-Beri strategic insights tentang sebuah niche/topik — siapa kompetitornya, pattern apa yang work, dan apa yang harus dilakukan untuk menang di niche tersebut.
+Beri strategic insights tentang sebuah niche/topik — pattern konten apa yang work, dan apa yang harus dilakukan untuk menang di niche tersebut.
 
 ATURAN:
 1. Respond dengan HANYA JSON object mentah. TANPA markdown fences. TANPA backticks.
 2. Semua rekomendasi harus SPECIFIK dan ACTIONABLE — bukan generic advice.
-3. Competitor accounts: GIVE ACCOUNTS YANG PALING RELEVANT dan REALISTIS berdasarkan niche spesifik yang diminta. Buat username dan display name yang LOGIS dan WAJAR untuk niche tersebut. Tidak boleh generic/wrong niche.
-4. Content patterns harus dari analisis pattern yang sering muncul di niche tersebut.
-5. Insights harus dalam Bahasa Indonesia.
-6. Untuk competitor accounts: GUNAKAN imagination BERBASIS DATA. Contoh jika niche "Template Canva", competitor harus akun yang GAYA-NYA mirip creator template/design Indonesia yang realistis (bukan random names).
+3. Content patterns harus dari analisis pattern yang sering muncul di niche tersebut.
+4. Insights harus dalam Bahasa Indonesia.
 
 OUTPUT JSON:
 {
@@ -55,35 +53,6 @@ OUTPUT JSON:
     "monetization": "string (cara monetize di niche ini)",
     "opportunity": "string (kenapa ini niche yang promising)"
   },
-  "competitors": [
-    {
-      "platform": "string (Instagram/TikTok/YouTube)",
-      "username": "string (username tanpa @)",
-      "displayName": "string (nama lengkap/brand)",
-      "followerCount": "string (estimasi follower, contoh: '50K-100K followers')",
-      "contentTheme": "string (tema konten utama)",
-      "whyFollow": "string (kenapa harus follow ini — max 1 kalimat)",
-      "contentStrength": "string (kekuatan konten mereka — max 1 kalimat)"
-    },
-    {
-      "platform": "string",
-      "username": "string",
-      "displayName": "string",
-      "followerCount": "string",
-      "contentTheme": "string",
-      "whyFollow": "string",
-      "contentStrength": "string"
-    },
-    {
-      "platform": "string",
-      "username": "string",
-      "displayName": "string",
-      "followerCount": "string",
-      "contentTheme": "string",
-      "whyFollow": "string",
-      "contentStrength": "string"
-    }
-  ],
   "contentPatterns": [
     {
       "pattern": "string (nama pattern, contoh: 'Before-After Reveal')",
@@ -198,19 +167,15 @@ CONTENT TYPE: ${contentType || "Umum"}
 
 TUGAS:
 1. Berikan overview niche (ukuran, kompetisi, cara monetize, opportunity)
-2. Rekomendasikan 3 competitor accounts di Indonesia yang GAYA dan TOPIKNYA SANGAT MIRIP dengan produk/campaign ini
-3. Identifikasi 5 content patterns yang work di niche ini
-4. Berikan strategic insights: differentiation, quick win, common mistake, secret weapon
-5. Buat action plan 3 langkah yang harus dilakukan SEKARANG
-6. Beri overall score (0-100) dan entry difficulty
+2. Identifikasi 5 content patterns yang work di niche ini
+3. Berikan strategic insights: differentiation, quick win, common mistake, secret weapon
+4. Buat action plan 3 langkah yang harus dilakukan SEKARANG
+5. Beri overall score (0-100) dan entry difficulty
 
 PENTING:
-- Competitor accounts: KETIK username yang LOGIS untuk niche "${safeNiche}" — username harus WAJAR, TOPIKNYA SESUAI, bukan random names. Contoh jika niche "Template Canva", gunakan gaya username akun creator template Indonesia yang realistis.
 - content patterns harus spesifik dan bisa langsung di-copy
 - action plan harus very actionable — hal yang bisa dilakukan dalam 1-2 hari
-- Semua dalam Bahasa Indonesia (kecuali username)`;
-
-    // Call Gemini
+- Semua dalam Bahasa Indonesia`;
     let result;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60_000);

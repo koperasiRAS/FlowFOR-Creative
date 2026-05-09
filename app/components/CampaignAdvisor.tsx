@@ -41,7 +41,7 @@ export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<AdvisorResponse["suggestedImprovements"] | null>(null);
   const [applied, setApplied] = useState<Record<string, boolean>>({});
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {

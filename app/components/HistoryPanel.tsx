@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar, Search, BarChart2, List, GitCompare } from "lucide-react";
+import { Calendar, Search, BarChart2, List } from "lucide-react";
 import type { HistoryItem } from "./GeneratorDashboard";
 import VibeChart from "./VibeChart";
-import CampaignCompare from "./CampaignCompare";
 
 interface HistoryPanelProps {
   onBack: () => void;
@@ -23,7 +22,7 @@ export default function HistoryPanel({
 }: HistoryPanelProps) {
   const [mounted, setMounted] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [viewTab, setViewTab] = useState<"list" | "chart" | "compare">("list");
+  const [viewTab, setViewTab] = useState<"list" | "chart">("list");
 
   useEffect(() => {
     setMounted(true);
@@ -112,17 +111,6 @@ export default function HistoryPanel({
               <BarChart2 size={12} />
               Chart
             </button>
-            <button
-              onClick={() => setViewTab("compare")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                viewTab === "compare"
-                  ? "bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              <GitCompare size={12} />
-              Compare
-            </button>
           </div>
         )}
 
@@ -138,16 +126,6 @@ export default function HistoryPanel({
       {viewTab === "chart" && !isSearching && (
         <div className="mb-5">
           <VibeChart history={history} />
-        </div>
-      )}
-
-      {/* Compare View */}
-      {viewTab === "compare" && !isSearching && (
-        <div className="mb-5">
-          <CampaignCompare
-            history={history}
-            onLoadCampaign={onLoadCampaign}
-          />
         </div>
       )}
 
