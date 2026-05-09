@@ -295,11 +295,11 @@ export default function CampaignRoadmap({
                               </span>
                               <span className="text-[10px] text-gray-500 font-medium">{entry.type}</span>
                             </div>
-                            <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 truncate">
+                            <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5">
                               {entry.topic}
                             </p>
                           </div>
-                          <p className="text-[9px] text-gray-400 italic max-w-[100px] truncate">
+                          <p className="text-[9px] text-gray-400 italic max-w-[140px]">
                             {entry.caption_hint}
                           </p>
                         </div>

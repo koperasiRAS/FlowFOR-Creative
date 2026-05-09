@@ -88,10 +88,20 @@ function ScoreCircle({ score }: { score: number }) {
   );
 }
 
-export default function NicheBriefAnalyzer() {
+interface NicheBriefAnalyzerProps {
+  productName?: string;
+  description?: string;
+  contentType?: string;
+}
+
+export default function NicheBriefAnalyzer({ productName = "", description = "", contentType = "Produk Digital" }: NicheBriefAnalyzerProps) {
   const { isDark } = useSettings();
-  const [niche, setNiche] = useState("");
-  const [contentType, setContentType] = useState("Produk Digital");
+  const [niche, setNiche] = useState(() => {
+    if (productName) return productName;
+    if (description) return description.split(" ").slice(0, 5).join(" ");
+    return "";
+  });
+  const [selectedContentType, setSelectedContentType] = useState(contentType);
   const [result, setResult] = useState<NicheBriefData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +122,7 @@ export default function NicheBriefAnalyzer() {
       const res = await fetch("/api/niche-brief", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ niche: niche.trim(), contentType }),
+        body: JSON.stringify({ niche: niche.trim(), contentType: selectedContentType }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Failed");
       const data: NicheBriefData = await res.json();
@@ -177,8 +187,8 @@ export default function NicheBriefAnalyzer() {
               disabled={isLoading}
             />
             <select
-              value={contentType}
-              onChange={(e) => setContentType(e.target.value)}
+              value={selectedContentType}
+              onChange={(e) => setSelectedContentType(e.target.value)}
               className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 text-xs cursor-pointer w-36"
               disabled={isLoading}
             >
