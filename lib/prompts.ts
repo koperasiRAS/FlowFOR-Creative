@@ -5,6 +5,9 @@
  * Unauthorized copying or redistribution is prohibited.
  */
 
+export const PROMPT_VERSION = "2.0.0";
+export const PROMPT_AUTHOR = "Rangga Danu Arta";
+
 /**
  * System prompt for Gemini 2.5 Flash — Virtual Creative Director
  * Persona: Expert Indonesian launch campaign strategist
