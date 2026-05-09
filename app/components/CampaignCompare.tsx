@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSettings } from "./SettingsContext";
 import { Check } from "lucide-react";
 import type { HistoryItem } from "./GeneratorDashboard";
 
@@ -16,8 +15,6 @@ interface ComparisonItem {
 }
 
 export default function CampaignCompare({ history, onLoadCampaign }: CampaignCompareProps) {
-  const { isDark } = useSettings();
-
   // Build selectable list (max last 30 items)
   const selectableItems = history.slice(0, 30);
   const [selections, setSelections] = useState<ComparisonItem[]>(

@@ -14,6 +14,7 @@ import {
 import { Line } from "react-chartjs-2";
 import { useEffect, useState } from "react";
 import { useSettings } from "./SettingsContext";
+import type { HistoryItem } from "./GeneratorDashboard";
 
 ChartJS.register(
   CategoryScale,
@@ -25,21 +26,6 @@ ChartJS.register(
   Legend,
   Filler
 );
-
-interface HistoryItem {
-  id: string;
-  productName: string;
-  targetAudience: string;
-  contentType: string;
-  result: {
-    vibeScore: {
-      score: number;
-      label: string;
-      reasons: string[];
-    };
-  };
-  createdAt: string;
-}
 
 interface VibeChartProps {
   history: HistoryItem[];
