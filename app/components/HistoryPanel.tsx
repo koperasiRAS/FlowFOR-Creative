@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar, Search } from "lucide-react";
+import { Calendar, Search, BarChart2, List } from "lucide-react";
 import type { HistoryItem } from "./GeneratorDashboard";
+import VibeChart from "./VibeChart";
 
 interface HistoryPanelProps {
   onBack: () => void;
@@ -21,6 +22,7 @@ export default function HistoryPanel({
 }: HistoryPanelProps) {
   const [mounted, setMounted] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [viewTab, setViewTab] = useState<"list" | "chart">("list");
 
   useEffect(() => {
     setMounted(true);
@@ -72,7 +74,7 @@ export default function HistoryPanel({
         ← Kembali ke Generator
       </button>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
             📁 Project Campaign
@@ -84,6 +86,34 @@ export default function HistoryPanel({
           </p>
         </div>
 
+        {/* View Tabs */}
+        {!isEmpty && !isSearching && (
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-800/50 rounded-xl p-1">
+            <button
+              onClick={() => setViewTab("list")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                viewTab === "list"
+                  ? "bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              <List size={12} />
+              List
+            </button>
+            <button
+              onClick={() => setViewTab("chart")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                viewTab === "chart"
+                  ? "bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              <BarChart2 size={12} />
+              Chart
+            </button>
+          </div>
+        )}
+
         {isSearching && (
           <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-3 py-1.5 rounded-full">
             <Search size={12} />
@@ -91,6 +121,13 @@ export default function HistoryPanel({
           </div>
         )}
       </div>
+
+      {/* Chart View */}
+      {viewTab === "chart" && !isSearching && (
+        <div className="mb-5">
+          <VibeChart history={history} />
+        </div>
+      )}
 
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
