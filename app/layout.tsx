@@ -1,7 +1,7 @@
 /**
  * FlowFOR Creative — App Shell Layout
  * © 2026 Rangga Danu Arta. All Rights Reserved.
- * Built for #JuaraVibeCoding competition by Google.
+ * Built for #JuaraVibeCoding competition by Google using Claude Code and Gemini Pro.
  */
 
 import type { Metadata } from "next";

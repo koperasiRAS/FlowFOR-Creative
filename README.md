@@ -1,7 +1,7 @@
 # 🚀 FlowFOR Creative — Smart Launch Command Center
 
 > AI-powered Smart Launch Command Center for digital creators and UMKM Indonesia.
-> Built for the **#JuaraVibeCoding** competition by Google.
+> Built for the **#JuaraVibeCoding** competition by Google, utilizing **Claude Code** and **Gemini Pro** for development.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue?style=flat-square&logo=typescript)
@@ -218,4 +218,4 @@ MIT License — free to use, modify, and ship!
 
 ---
 
-> Built with 💜 for the **#JuaraVibeCoding** competition
+> Built with 💜 for the **#JuaraVibeCoding** competition using **Claude Code** & **Gemini Pro**
