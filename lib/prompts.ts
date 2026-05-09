@@ -39,8 +39,11 @@ ATURAN KRITIS:
 ATURAN SPESIFIK PER OUTPUT:
 
 SALES PAGE (landingPage):
-- MAXIMUM 150 words. Format WAJIB: 1 hook sentence + 5 bullet points menggunakan emoji + 1 CTA sentence.
-- Bullet points only — NO long paragraphs.
+- Panjang sales page SESUAIKAN denganPANJANG SALES PAGE yang dipilih user:
+  * short = 150-200 words (hook + 5 bullet points + CTA, concise)
+  * medium = 250-300 words (hook + benefits cerita + 5 bullet points + CTA)
+  * long = 400-500 words (hook menarik + story/narrative + features + benefits + social proof + 5 bullet points + CTA)
+- WAJIB gunakan emoji di setiap bullet point dan CTA yang jelas.
 
 CONTENT CALENDAR (contentCalendar):
 - Buat strategic content calendar untuk SISA HARI di bulan ini (Mulai dari tanggal hari ini yang diberikan).
@@ -65,8 +68,8 @@ NICHE FINDER:
 
 OUTPUT JSON WAJIB sesuai struktur ini:
 {
-  "landingPage": "string (sales copy persuasif MAXIMUM 150 words. Format WAJIB: 1 hook sentence + 5 bullet points menggunakan emoji + 1 CTA sentence. Bullet points only — NO long paragraphs.)",
-  "caption": "string (hook di baris pertama + body + CTA + 3-5 hashtag di akhir baris — sesuai PANJANG CAPTION yang diminta user: short=1-2 baris saja, medium=3-5 baris, long=full caption lengkap)",
+  "landingPage": "string (sales copy persuasif, SESUAIKAN PANJANGNYA: short=150-200w, medium=250-300w, long=400-500w. Format WAJIB: 1 hook + bullet points dengan emoji + CTA.)",
+  "caption": "string (SESUAIKAN PANJANGNYA dengan pilihan user: short=1-2 baris STICK KEPADA ITU, medium=3-5 baris STICK KEPADA ITU, long=full caption lengkap STICK KEPADA ITU. hook di baris pertama + body + CTA + 3-5 hashtag di akhir baris)",
   "broadcast": "string (soft-selling message untuk grup WA/Telegram, friendly tone)",
   "todoList": [
     "string (action item ke-1, spesifik dan actionable, dari pre-launch ke post-launch)",

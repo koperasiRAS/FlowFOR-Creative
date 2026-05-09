@@ -96,6 +96,21 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
+/* Smooth transitions for form inputs */
+.form-input,
+select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 0.25s ease,
+              color 0.25s ease;
+}
+
+/* === FORM INPUT BASE === */
 .form-input {
   background: white;
   border: 1.5px solid #d8b4fe;
@@ -104,7 +119,6 @@ body {
   font-size: 14px;
   color: #1f2937;
   width: 100%;
-  transition: all 0.2s ease;
   outline: none;
 }
 .form-input::placeholder {
@@ -113,9 +127,52 @@ body {
 .form-input:focus {
   border-color: #7c3aed;
   box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+  transform: translateY(-1px);
 }
 .form-input:hover {
   border-color: #a78bfa;
+}
+
+/* Dropdown select options animation */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  padding-right: 36px;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+select:hover {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 2px rgba(124,58,237,0.08);
+}
+
+select:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+select option {
+  animation: dropdownFadeIn 0.15s ease-out;
+  transition: background-color 0.15s ease;
+  padding: 8px 12px;
 }
 
 /* Shimmer Animation for Loading Skeleton */

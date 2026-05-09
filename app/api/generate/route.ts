@@ -259,9 +259,27 @@ Jawab HANYA dengan JSON object sesuai format sistemprompt.`;
     }
 
     // ---- Main Gemini call ----
+    const copyLen = body.copyLength || "short";
+    const captionLen = body.captionLength || "medium";
+
+    // Build dynamic system instruction that includes user's length preferences
+    const dynamicSystemPrompt = `${SYSTEM_PROMPT}
+
+PANJANG SALES PAGE SAAT INI: ${copyLen}
+- short: 150-200 kata
+- medium: 250-300 kata
+- long: 400-500 kata
+
+PANJANG CAPTION SAAT INI: ${captionLen}
+- short: 1-2 baris SAJA
+- medium: 3-5 baris
+- long: full caption lengkap
+
+WAJIB PATUHI PANJANG DI ATAS. JANGAN LEBIH, JANGAN KURANG.`;
+
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: dynamicSystemPrompt,
       safetySettings,
       generationConfig: {
         responseMimeType: "application/json",
