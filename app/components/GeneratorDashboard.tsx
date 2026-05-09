@@ -121,6 +121,12 @@ const COPY_LENGTHS = [
   { label: "Long (400 kata)", value: "long" },
 ];
 
+const CAPTION_LENGTHS = [
+  { label: "Pendek (1-2 baris)", value: "short" },
+  { label: "Sedang (3-5 baris)", value: "medium" },
+  { label: "Panjang (full caption)", value: "long" },
+];
+
 const CONTENT_TYPES = [
   { value: "Produk Digital", label: "Produk Digital" },
   { value: "Jasa/Service", label: "Jasa/Service" },
@@ -900,7 +906,7 @@ export default function GeneratorDashboard({
     if (initialResult === null) {
       // New Campaign — reset all fields
       setResult(null);
-      setFormData({ productName: "", description: "", contentType: "Produk Digital" });
+      setFormData({ productName: "", description: "", contentType: "Produk Digital", imageData: undefined });
       setTargetTags([]);
       setErrorMessage(null);
       setCopiedCard(null);
@@ -1052,6 +1058,7 @@ export default function GeneratorDashboard({
           interestHint: formData.interestHint || "",
           language: settings?.language ?? "id",
           copyLength: settings?.copyLength ?? "short",
+          captionLength: settings?.captionLength ?? "medium",
           platforms: settings?.platforms ?? ["Instagram", "TikTok"],
           imageData: formData.imageData || undefined,
         }),
@@ -1193,15 +1200,15 @@ export default function GeneratorDashboard({
               </div>
 
               {/* Settings overrides in form */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Language */}
                 <div>
-                  <label htmlFor="bahasaOutput" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label htmlFor="bahasaOutput" className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Bahasa Output
                   </label>
                   <select
                     id="bahasaOutput"
-                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer"
+                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer text-xs"
                     value={settings.language}
                     onChange={(e) => updateSettings({ ...settings, language: e.target.value })}
                     disabled={isLoading}
@@ -1213,17 +1220,34 @@ export default function GeneratorDashboard({
                 </div>
                 {/* Copy Length */}
                 <div>
-                  <label htmlFor="panjangCopywriting" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                    Panjang Copywriting
+                  <label htmlFor="panjangCopywriting" className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Sales Page
                   </label>
                   <select
                     id="panjangCopywriting"
-                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer"
+                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer text-xs"
                     value={settings.copyLength}
                     onChange={(e) => updateSettings({ ...settings, copyLength: e.target.value })}
                     disabled={isLoading}
                   >
                     {COPY_LENGTHS.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Caption Length */}
+                <div>
+                  <label htmlFor="panjangCaption" className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Panjang Caption
+                  </label>
+                  <select
+                    id="panjangCaption"
+                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer text-xs"
+                    value={settings.captionLength}
+                    onChange={(e) => updateSettings({ ...settings, captionLength: e.target.value })}
+                    disabled={isLoading}
+                  >
+                    {CAPTION_LENGTHS.map((c) => (
                       <option key={c.value} value={c.value}>{c.label}</option>
                     ))}
                   </select>

@@ -4,13 +4,15 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 
 export interface AppSettings {
   language: string;       // "id" | "en"
-  copyLength: string;     // "short" | "medium" | "long"
+  copyLength: string;     // "short" | "medium" | "long" (sales page length)
+  captionLength: string;  // "short" | "medium" | "long" (caption length)
   platforms: string[];     // e.g. ["Instagram", "TikTok"]
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   language: "id",
   copyLength: "short",
+  captionLength: "medium",
   platforms: ["Instagram", "TikTok"],
 };
 

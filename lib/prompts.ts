@@ -66,7 +66,7 @@ NICHE FINDER:
 OUTPUT JSON WAJIB sesuai struktur ini:
 {
   "landingPage": "string (sales copy persuasif MAXIMUM 150 words. Format WAJIB: 1 hook sentence + 5 bullet points menggunakan emoji + 1 CTA sentence. Bullet points only — NO long paragraphs.)",
-  "caption": "string (hook di baris pertama + body + CTA + 3-5 hashtag di akhir baris)",
+  "caption": "string (hook di baris pertama + body + CTA + 3-5 hashtag di akhir baris — sesuai PANJANG CAPTION yang diminta user: short=1-2 baris saja, medium=3-5 baris, long=full caption lengkap)",
   "broadcast": "string (soft-selling message untuk grup WA/Telegram, friendly tone)",
   "todoList": [
     "string (action item ke-1, spesifik dan actionable, dari pre-launch ke post-launch)",

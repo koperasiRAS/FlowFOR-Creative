@@ -5,6 +5,7 @@ import Sidebar, { type ActivePanel } from "./Sidebar";
 import GeneratorDashboard from "./GeneratorDashboard";
 import HistoryPanel from "./HistoryPanel";
 import SettingsPanel from "./SettingsPanel";
+import WelcomeGuide from "./WelcomeGuide";
 import type { HistoryItem, GenerateResult } from "./GeneratorDashboard";
 
 
@@ -145,9 +146,12 @@ export default function SidebarWrapper({ searchQuery = "" }: { searchQuery?: str
   };
 
   return (
-    <div className="flex" style={{ minHeight: "calc(100vh - 4rem)" }}>
+    <>
+      <WelcomeGuide />
+      <div className="flex" style={{ minHeight: "calc(100vh - 4rem)" }}>
       <Sidebar activePanel={activePanel} onPanelChange={setActivePanel} onNewCampaign={handleNewCampaign} />
       <main className="flex-1 min-w-0 pb-20 md:pb-0">{renderPanel()}</main>
     </div>
+    </>
   );
 }

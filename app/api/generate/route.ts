@@ -58,6 +58,7 @@ export interface GenerateRequestBody {
   interestHint?: string;
   language?: string;
   copyLength?: string;
+  captionLength?: string;
   platforms?: string[];
   imageData?: string; // base64 data URL, optional
 }
@@ -291,7 +292,8 @@ TARGET AUDIENCE: ${safeAudience}
 DESCRIPTION: ${safeDescription}
 CONTENT TYPE: ${contentType}
 BAHASA: ${body.language || 'id'}
-PANJANG COPY: ${body.copyLength || 'short'}
+PANJANG SALES PAGE: ${body.copyLength || 'short'}
+PANJANG CAPTION SOSMED: ${body.captionLength || 'medium'} (short=1-2 baris, medium=3-5 baris, long=full caption)
 PLATFORM TERPILIH: ${selectedPlatforms}
 TANGGAL HARI INI: ${currentDay} ${currentMonth}
 SISA HARI DI BULAN INI: ${remainingDays} hari
