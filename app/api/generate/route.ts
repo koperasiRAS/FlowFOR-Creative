@@ -8,6 +8,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { SYSTEM_PROMPT } from "@/lib/prompts";
+import { env } from "@/lib/env";
+
+// ==============================================
+// RATE LIMITER — In-memory, 10 req/min/IP
+// ==============================================
+const rateLimiter = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10;
+const RATE_WINDOW = 60_000; // 1 minute
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimiter.get(ip);
+  if (entry && now < entry.resetAt) {
+    if (entry.count >= RATE_LIMIT) return false;
+    entry.count++;
+  } else {
+    rateLimiter.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+  }
+  return true;
+}
+
+// ==============================================
+// INPUT SANITIZER — Strip dangerous characters
+// ==============================================
+const DANGEROUS_CHARS = /[<>{}\\]+/g;
+const sanitize = (str: string): string => str.replace(DANGEROUS_CHARS, "").trim();
 
 // ==============================================
 // TYPES
@@ -84,46 +110,65 @@ const safetySettings: { category: HarmCategory; threshold: HarmBlockThreshold }[
 // ==============================================
 export async function POST(req: NextRequest) {
   try {
-    // 1. Read API key
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey.trim() === "") {
+    // 1. Rate limiting — get client IP
+    const forwarded = req.headers.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+    if (!checkRateLimit(ip)) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY is not configured. Please set it in .env.local" },
-        { status: 500 }
+        { error: "Terlalu banyak request. Tunggu sebentar lalu coba lagi." },
+        { status: 429 }
       );
     }
 
-    // 2. Parse request body
-    const body = await req.json() as GenerateRequestBody;
+    // 2. Read API key (validated at startup via lib/env.ts)
+    const apiKey = env.GEMINI_API_KEY;
+
+    // 3. Parse request body
+    let body: GenerateRequestBody;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+    }
     const { productName, targetAudience, description, contentType } = body;
 
-    // 2a. Input validation — max lengths to prevent DoS
+    // 3a. Input validation — required fields
+    if (!productName || !targetAudience || !description || !contentType) {
+      return NextResponse.json(
+        { error: "Field wajib hilang: productName, targetAudience, description, contentType." },
+        { status: 400 }
+      );
+    }
+
+    // 3b. Input length validation (anti DoS)
     const MAX = { productName: 200, targetAudience: 200, description: 2000, interestHint: 500 };
     if (
-      !productName || !targetAudience || !description ||
       productName.length > MAX.productName ||
       targetAudience.length > MAX.targetAudience ||
       description.length > MAX.description ||
       (body.interestHint && body.interestHint.length > MAX.interestHint)
     ) {
       return NextResponse.json(
-        { error: "Input terlalu panjang atau ada field yang kosong. Mohon periksa kembali." },
+        { error: "Input terlalu panjang. Mohon periksa kembali." },
         { status: 400 }
       );
     }
 
-    // 2b. Validate contentType against allowed values
+    // 3c. Validate contentType against allowed values
     const VALID_CONTENT_TYPES = [
       "Produk Digital", "Jasa/Service", "Event/Webinar",
       "Affiliate/Review", "Konten Edukasi", "Konten Monetisasi",
       "Podcast/Audio", "Niche Finder",
     ];
-    if (contentType && !VALID_CONTENT_TYPES.includes(contentType)) {
-      return NextResponse.json(
-        { error: "contentType tidak valid." },
-        { status: 400 }
-      );
+    if (!VALID_CONTENT_TYPES.includes(contentType)) {
+      return NextResponse.json({ error: "contentType tidak valid." }, { status: 400 });
     }
+
+    // 3d. Sanitize all string inputs (anti injection)
+    const safeProductName = sanitize(productName);
+    const safeDescription = sanitize(description);
+    const safeAudience = sanitize(targetAudience);
+    const safeInterestHint = body.interestHint ? sanitize(body.interestHint) : undefined;
 
     // 3. Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -136,7 +181,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 4. Build user prompt with real-time context
+    // 4. Build user prompt with sanitized, real-time context
     const today = new Date();
     const currentMonth = today.toLocaleString('id-ID', { month: 'long' });
     const currentDay = today.getDate();
@@ -145,10 +190,10 @@ export async function POST(req: NextRequest) {
     const selectedPlatforms = (body.platforms && body.platforms.length > 0) ? body.platforms.join(", ") : "Instagram, TikTok, WhatsApp, YouTube";
 
     const userPrompt = `Buatkan launch kit untuk produk berikut:
-    
-PRODUCT NAME: ${productName}
-TARGET AUDIENCE: ${targetAudience}
-DESCRIPTION: ${description}
+
+PRODUCT NAME: ${safeProductName}
+TARGET AUDIENCE: ${safeAudience}
+DESCRIPTION: ${safeDescription}
 CONTENT TYPE: ${contentType}
 BAHASA: ${body.language || 'id'}
 PANJANG COPY: ${body.copyLength || 'short'}
@@ -156,7 +201,7 @@ PLATFORM TERPILIH: ${selectedPlatforms}
 TANGGAL HARI INI: ${currentDay} ${currentMonth}
 SISA HARI DI BULAN INI: ${remainingDays} hari
 
-${body.interestHint ? `USER INTEREST/HINT: ${body.interestHint}` : ""}
+${safeInterestHint ? `USER INTEREST/HINT: ${safeInterestHint}` : ""}
 
 PENTING:
 - Content Calendar HARUS mulai dari tanggal ${currentDay} ${currentMonth} sampai akhir bulan.
