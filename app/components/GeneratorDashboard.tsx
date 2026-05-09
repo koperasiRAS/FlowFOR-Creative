@@ -12,6 +12,7 @@ import {
   Share2,
   Download,
   Package,
+  Upload,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -22,7 +23,6 @@ import { useSettings } from "./SettingsContext";
 import { exportCampaignToZip, type ExportData } from "@/lib/zipExporter";
 import { generateCampaignPDF, type PDFData } from "@/lib/pdfExporter";
 import ScoreBreakdown from "./ScoreBreakdown";
-import ImageAnalyzer from "./ImageAnalyzer";
 
 // ==============================================
 // TYPES
@@ -49,6 +49,17 @@ export interface GenerateResult {
   contentCalendar?: ContentCalendarEntry[];
   shootScript?: ShootScriptData;
   nicheRecommendation?: string;
+  imageAnalysis?: {
+    visualTheme: string;
+    contentCategory: string;
+    suggestedNiche: string;
+    platformRecommendation: string;
+    colorPalette: string[];
+    visualStrength: string;
+    visualImprovement: string;
+    campaignAngle: string;
+    visualSuggestion: string;
+  };
 }
 
 export interface ContentCalendarEntry {
@@ -86,6 +97,7 @@ interface FormData {
   description: string;
   contentType: string;
   interestHint?: string;
+  imageData?: string; // base64 data URL
 }
 
 interface GeneratorDashboardProps {
@@ -1041,6 +1053,7 @@ export default function GeneratorDashboard({
           language: settings?.language ?? "id",
           copyLength: settings?.copyLength ?? "short",
           platforms: settings?.platforms ?? ["Instagram", "TikTok"],
+          imageData: formData.imageData || undefined,
         }),
       });
 
@@ -1265,6 +1278,70 @@ export default function GeneratorDashboard({
                 />
               </div>
 
+              {/* Image Upload — AI Visual Analysis */}
+              <div>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  📸 Gambar Produk / Cover
+                  <span className="text-gray-400 font-normal ml-1">(opsional)</span>
+                </label>
+                {formData.imageData ? (
+                  <div className="relative rounded-xl overflow-hidden border-2 border-purple-200 dark:border-purple-800">
+                    <div className="relative w-full h-40">
+                      <Image
+                        src={formData.imageData}
+                        alt="Product preview"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, imageData: undefined }))}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors text-sm font-bold"
+                    >
+                      ×
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                      <Sparkles size={9} /> AI akan analisa visual ini
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files[0];
+                      if (file && file.type.startsWith("image/")) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setFormData((prev) => ({ ...prev, imageData: ev.target?.result as string }));
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition-all py-5
+                      ${isDark ? "border-white/20 hover:border-purple-400/50 bg-slate-800/20" : "border-gray-200 hover:border-purple-400/50 bg-gray-50/50"}`}
+                  >
+                    <Upload size={20} className={`mb-1.5 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
+                    <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 text-center">
+                      Drag & drop atau klik untuk upload cover produk
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">JPEG, PNG, WebP · Maks 5MB</p>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setFormData((prev) => ({ ...prev, imageData: ev.target?.result as string }));
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+
               {/* Content Type */}
               <div>
                 <label htmlFor="contentType" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -1333,7 +1410,7 @@ export default function GeneratorDashboard({
                 ) : (
                   <>
                     <Sparkles size={16} />
-                    Generate Launch Kit
+                    {formData.imageData ? "Generate + Analisa Visual" : "Generate Launch Kit"}
                   </>
                 )}
               </button>
@@ -1357,6 +1434,44 @@ export default function GeneratorDashboard({
                       <p className="text-xs font-semibold text-purple-700">
                         ✨ Niche yang direkomendasikan: <span className="font-bold">{result.nicheRecommendation}</span>
                       </p>
+                    </div>
+                  )}
+
+                  {/* Visual Analysis Banner (from image) */}
+                  {result?.imageAnalysis && (
+                    <div className="glass-card p-4 animate-enter-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="inline-block bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                          Vision AI
+                        </span>
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-100 text-xs">AI Visual Analysis</h4>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {[
+                          { label: "🎨 Tema Visual", text: result.imageAnalysis.visualTheme },
+                          { label: "📐 Campaign Angle", text: result.imageAnalysis.campaignAngle },
+                          { label: "🗺️ Platform", text: result.imageAnalysis.platformRecommendation },
+                          { label: "⚡ Strength", text: result.imageAnalysis.visualStrength },
+                          { label: "🔧 Improvement", text: result.imageAnalysis.visualImprovement },
+                        ].map(({ label, text }) => (
+                          <div key={label} className="bg-indigo-50/50 dark:bg-indigo-900/20 rounded-xl p-2.5">
+                            <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">{label}</p>
+                            <p className="text-[11px] text-gray-700 dark:text-gray-200 leading-relaxed">{text}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {result.imageAnalysis.colorPalette.length > 0 && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <p className="text-[9px] font-bold text-gray-400">Warna:</p>
+                          <div className="flex gap-1.5">
+                            {result.imageAnalysis.colorPalette.map((c) => (
+                              <span key={c} className="text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/40 px-2 py-0.5 rounded-full">
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1492,14 +1607,6 @@ export default function GeneratorDashboard({
                         description={formData.description}
                         contentType={formData.contentType}
                       />
-                  </div>
-
-                  {/* Row 10: AI Image Analyzer */}
-                  <div className="animate-enter-7 mt-4">
-                    <ImageAnalyzer
-                      productName={formData.productName}
-                      contentType={formData.contentType}
-                    />
                   </div>
 
                   {/* Action Bar */}

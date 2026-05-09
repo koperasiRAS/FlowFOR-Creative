@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { SYSTEM_PROMPT } from "@/lib/prompts";
+import { SYSTEM_PROMPT, IMAGE_ANALYSIS_SYSTEM_PROMPT } from "@/lib/prompts";
 import { env } from "@/lib/env";
 
 // ==============================================
@@ -59,6 +59,7 @@ export interface GenerateRequestBody {
   language?: string;
   copyLength?: string;
   platforms?: string[];
+  imageData?: string; // base64 data URL, optional
 }
 
 export interface GenerateResponse {
@@ -71,6 +72,19 @@ export interface GenerateResponse {
   contentCalendar: ContentCalendarEntry[];
   shootScript: ShootScriptData;
   nicheRecommendation?: string;
+  imageAnalysis?: ImageAnalysis;
+}
+
+interface ImageAnalysis {
+  visualTheme: string;
+  contentCategory: string;
+  suggestedNiche: string;
+  platformRecommendation: string;
+  colorPalette: string[];
+  visualStrength: string;
+  visualImprovement: string;
+  campaignAngle: string;
+  visualSuggestion: string;
 }
 
 interface ContentCalendarEntry {
@@ -130,7 +144,7 @@ export async function POST(req: NextRequest) {
     } catch {
       return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
     }
-    const { productName, targetAudience, description, contentType } = body;
+    const { productName, targetAudience, description, contentType, imageData } = body;
 
     // 3a. Input validation — required fields
     if (!productName || !targetAudience || !description || !contentType) {
@@ -146,7 +160,8 @@ export async function POST(req: NextRequest) {
       productName.length > MAX.productName ||
       targetAudience.length > MAX.targetAudience ||
       description.length > MAX.description ||
-      (body.interestHint && body.interestHint.length > MAX.interestHint)
+      (body.interestHint && body.interestHint.length > MAX.interestHint) ||
+      (body.imageData && body.imageData.length > 8 * 1024 * 1024) // max 8MB base64
     ) {
       return NextResponse.json(
         { error: "Input terlalu panjang. Mohon periksa kembali." },
@@ -172,6 +187,77 @@ export async function POST(req: NextRequest) {
 
     // 3. Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
+
+    // 4. Build user prompt with sanitized, real-time context
+    const today = new Date();
+    const currentMonth = today.toLocaleString('id-ID', { month: 'long' });
+    const currentDay = today.getDate();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const remainingDays = daysInMonth - currentDay + 1;
+    const selectedPlatforms = (body.platforms && body.platforms.length > 0) ? body.platforms.join(", ") : "Instagram, TikTok, WhatsApp, YouTube";
+
+    // ---- Image Analysis (if imageData provided) ----
+    let imageAnalysis: GenerateResponse["imageAnalysis"] = undefined;
+
+    if (imageData && imageData.startsWith("data:image/")) {
+      const mimeMatch = imageData.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (mimeMatch) {
+        const [, mimeType, base64Data] = mimeMatch;
+
+        const visionModel = genAI.getGenerativeModel({
+          model: "gemini-2.5-flash",
+          systemInstruction: IMAGE_ANALYSIS_SYSTEM_PROMPT,
+          safetySettings,
+          generationConfig: { responseMimeType: "application/json" },
+        });
+
+        const analysisPrompt = `Analisa gambar produk berikut untuk campaign launch:
+
+PRODUCT CONTEXT: ${safeProductName}
+DESCRIPTION: ${safeDescription}
+CONTENT TYPE: ${contentType}
+
+Jawab HANYA dengan JSON object sesuai format sistemprompt.`;
+
+        let analysisResult;
+        const ac = new AbortController();
+        const analysisTimeout = setTimeout(() => ac.abort(), 60_000);
+        try {
+          analysisResult = await visionModel.generateContent([
+            { inlineData: { mimeType, data: base64Data } },
+            { text: analysisPrompt },
+          ], { signal: ac.signal });
+        } catch (analysisErr: unknown) {
+          clearTimeout(analysisTimeout);
+          if (analysisErr instanceof Error && analysisErr.name !== "AbortError") {
+            if (process.env.NODE_ENV === "development") console.error("[API] Image analysis failed:", analysisErr);
+          }
+        }
+        clearTimeout(analysisTimeout);
+
+        if (analysisResult) {
+          const rawAnalysis = analysisResult.response.text().trim().replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+          try {
+            const parsedAnalysis = JSON.parse(rawAnalysis);
+            imageAnalysis = {
+              visualTheme: parsedAnalysis.visualTheme ?? "",
+              contentCategory: parsedAnalysis.contentCategory ?? "",
+              suggestedNiche: parsedAnalysis.suggestedNiche ?? "",
+              platformRecommendation: parsedAnalysis.platformRecommendation ?? "",
+              colorPalette: parsedAnalysis.colorPalette ?? [],
+              visualStrength: parsedAnalysis.visualStrength ?? "",
+              visualImprovement: parsedAnalysis.visualImprovement ?? "",
+              campaignAngle: parsedAnalysis.campaignAngle ?? "",
+              visualSuggestion: parsedAnalysis.captionSuggestion ?? parsedAnalysis.visualSuggestion ?? "",
+            };
+          } catch {
+            if (process.env.NODE_ENV === "development") console.error("[API] Image analysis parse failed:", rawAnalysis.slice(0, 200));
+          }
+        }
+      }
+    }
+
+    // ---- Main Gemini call ----
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       systemInstruction: SYSTEM_PROMPT,
@@ -181,13 +267,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 4. Build user prompt with sanitized, real-time context
-    const today = new Date();
-    const currentMonth = today.toLocaleString('id-ID', { month: 'long' });
-    const currentDay = today.getDate();
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    const remainingDays = daysInMonth - currentDay + 1;
-    const selectedPlatforms = (body.platforms && body.platforms.length > 0) ? body.platforms.join(", ") : "Instagram, TikTok, WhatsApp, YouTube";
+    let extraContext = "";
+    if (imageAnalysis) {
+      extraContext = `
+VISUAL ANALYSIS (dari gambar yang diupload user):
+- Tema Visual: ${imageAnalysis.visualTheme}
+- Kategori Konten: ${imageAnalysis.contentCategory}
+- Sudut Campaign: ${imageAnalysis.campaignAngle}
+- Warna Dominan: ${imageAnalysis.colorPalette.join(", ")}
+- Kekuatan Visual: ${imageAnalysis.visualStrength}
+- Improvement Visual: ${imageAnalysis.visualImprovement}
+- Suggesti Sudut Copywriting: ${imageAnalysis.visualSuggestion}
+${imageAnalysis.suggestedNiche ? `- Niche yang Cocok: ${imageAnalysis.suggestedNiche}` : ""}
+${imageAnalysis.platformRecommendation ? `- Platform Rekomendasi: ${imageAnalysis.platformRecommendation}` : ""}
+
+GUNAKAN insights visual ini untuk MENINGKATKAN kualitas landingPage, caption, broadcast, dan storyboard.`;
+    }
 
     const userPrompt = `Buatkan launch kit untuk produk berikut:
 
@@ -200,8 +295,7 @@ PANJANG COPY: ${body.copyLength || 'short'}
 PLATFORM TERPILIH: ${selectedPlatforms}
 TANGGAL HARI INI: ${currentDay} ${currentMonth}
 SISA HARI DI BULAN INI: ${remainingDays} hari
-
-${safeInterestHint ? `USER INTEREST/HINT: ${safeInterestHint}` : ""}
+${safeInterestHint ? `\nUSER INTEREST/HINT: ${safeInterestHint}` : ""}${extraContext}
 
 PENTING:
 - Content Calendar HARUS mulai dari tanggal ${currentDay} ${currentMonth} sampai akhir bulan.
@@ -268,7 +362,12 @@ PENTING:
       );
     }
 
-    // 9. Return success
+    // 9. Attach image analysis if present
+    if (imageAnalysis) {
+      parsed.imageAnalysis = imageAnalysis;
+    }
+
+    // 10. Return success
     return NextResponse.json(parsed, { status: 200 });
 
   } catch (err) {
