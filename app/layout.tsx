@@ -1,3 +1,9 @@
+/**
+ * FlowFOR Creative — App Shell Layout
+ * © 2026 Rangga Danu Arta. All Rights Reserved.
+ * Built for #JuaraVibeCoding competition by Google.
+ */
+
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
