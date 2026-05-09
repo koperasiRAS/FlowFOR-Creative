@@ -23,6 +23,7 @@ import { useSettings } from "./SettingsContext";
 import { exportCampaignToZip, type ExportData } from "@/lib/zipExporter";
 import { generateCampaignPDF, type PDFData } from "@/lib/pdfExporter";
 import ScoreBreakdown from "./ScoreBreakdown";
+import CampaignAdvisor from "./CampaignAdvisor";
 
 // ==============================================
 // TYPES
@@ -40,6 +41,8 @@ interface VibeScoreData {
 }
 
 export interface GenerateResult {
+  productName?: string;
+  contentType?: string;
   landingPage: string;
   caption: string;
   broadcast: string;
@@ -1599,6 +1602,16 @@ export default function GeneratorDashboard({
                         landingPage={result.landingPage}
                         broadcast={result.broadcast}
                         todoList={result.todoList}
+                      />
+                    </div>
+                  )}
+
+                  {/* Row 6c: AI Campaign Advisor */}
+                  {result && (
+                    <div className="animate-enter-5 mt-4">
+                      <CampaignAdvisor
+                        result={result as Parameters<typeof CampaignAdvisor>[0]["result"]}
+                        onUpdateResult={setResult as (r: GenerateResult) => void}
                       />
                     </div>
                   )}
