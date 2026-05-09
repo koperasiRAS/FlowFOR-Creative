@@ -18,6 +18,7 @@ import Image from "next/image";
 import ContentCalendar from "./ContentCalendar";
 import { useSettings } from "./SettingsContext";
 import { exportCampaignToZip, type ExportData } from "@/lib/zipExporter";
+import { generateCampaignPDF, type PDFData } from "@/lib/pdfExporter";
 import ScoreBreakdown from "./ScoreBreakdown";
 
 // ==============================================
@@ -969,8 +970,47 @@ export default function GeneratorDashboard({
       await exportCampaignToZip(exportData);
       showToast("ZIP downloaded!");
     } catch (err) {
-      console.error("[Export] Gagal export ZIP:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Export] Gagal export ZIP:", err);
+      }
       showToast("Export gagal. Coba lagi.");
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!result) return;
+    showToast("Membuat PDF Report...");
+    try {
+      const pdfData: PDFData = {
+        productName: formData.productName || "Campaign",
+        contentType: formData.contentType,
+        targetAudience: targetAudienceValue || formData.productName,
+        landingPage: result.landingPage,
+        caption: result.caption,
+        broadcast: result.broadcast,
+        todoList: result.todoList,
+        storyboard: result.storyboard,
+        vibeScore: result.vibeScore,
+        contentCalendar: result.contentCalendar,
+        shootScript: result.shootScript,
+        nicheRecommendation: result.nicheRecommendation,
+        generatedAt: new Date().toISOString(),
+      };
+      const blob = await generateCampaignPDF(pdfData);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `FlowFOR-${(formData.productName || "Campaign").replace(/[^a-zA-Z0-9]/g, "-").slice(0, 40)}-${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("PDF Report downloaded!");
+    } catch (err) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Export] Gagal export PDF:", err);
+      }
+      showToast("PDF export gagal. Coba lagi.");
     }
   };
 
@@ -1469,6 +1509,16 @@ export default function GeneratorDashboard({
                         >
                           <Package size={14} />
                           Download ZIP
+                        </button>
+
+                        <button
+                          onClick={handleExportPDF}
+                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-amber-300
+                                     text-amber-600 font-semibold text-xs hover:bg-amber-50
+                                     active:scale-95 transition-all duration-200 shadow-sm"
+                        >
+                          <Download size={14} />
+                          PDF Report
                         </button>
 
                         <button
