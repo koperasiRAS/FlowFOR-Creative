@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Target, TrendingUp, AlertTriangle, Zap, CheckCircle2, Loader2, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Target, TrendingUp, AlertTriangle, Zap, CheckCircle2, Loader2, ChevronDown, ChevronUp, ExternalLink, Globe } from "lucide-react";
 import { useSettings } from "./SettingsContext";
 
 interface NicheBriefData {
@@ -295,10 +295,20 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
                     </div>
                     <button
                       onClick={() => copyToClipboard(c.username, "Username")}
-                      className="text-[9px] text-violet-500 hover:text-violet-700 font-medium"
+                      className="text-[9px] text-violet-500 hover:text-violet-700 font-medium flex-shrink-0"
                     >
                       Copy
                     </button>
+                    <a
+                      href={`https://${c.platform.toLowerCase()}.com/${c.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[9px] text-indigo-500 hover:text-indigo-700 font-medium flex items-center gap-0.5 flex-shrink-0"
+                      title={`Buka @${c.username} di ${c.platform}`}
+                    >
+                      <Globe size={9} /> Profil
+                    </a>
                   </div>
                 );
               })}
