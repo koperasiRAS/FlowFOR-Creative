@@ -171,8 +171,8 @@ export default function NicheBriefAnalyzer() {
               type="text"
               value={niche}
               onChange={(e) => setNiche(e.target.value)}
-              placeholder="Contoh: Canva Templates, Digital Marketing, Fintech..."
-              className="flex-1 form-input dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 text-xs"
+              placeholder="Ketik niche kamu di sini... (cth: Canva Templates, Digital Marketing)"
+              className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 text-xs font-medium placeholder:text-gray-400 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:border-violet-500 dark:focus:ring-violet-900/30 transition-all"
               onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
               disabled={isLoading}
             />

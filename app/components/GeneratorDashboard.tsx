@@ -328,7 +328,7 @@ function BentoCard({
   pillBg?: string;
   pillText?: string;
   pillLabel?: string;
-  onRegenerate?: (section: string, original: string, mode: "improve" | "improve_and_variants") => void;
+  onRegenerate?: (section: string, mode: "improve" | "improve_and_variants") => void;
   isRegenerating?: boolean;
   sectionKey?: string;
 }) {
@@ -358,7 +358,7 @@ function BentoCard({
         )}
         {!isLoading && onRegenerate && (
           <button
-            onClick={() => onRegenerate("improve", "", "improve")}
+            onClick={() => sectionKey && onRegenerate(sectionKey, "improve")}
             disabled={isRegenerating}
             className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-purple-100 text-purple-500 hover:text-purple-600 disabled:opacity-50 text-[10px] font-bold"
             title="Perbaiki versi ini"
@@ -368,7 +368,7 @@ function BentoCard({
         )}
         {!isLoading && onRegenerate && (
           <button
-            onClick={() => onRegenerate("improve_and_variants", "", "improve_and_variants")}
+            onClick={() => sectionKey && onRegenerate(sectionKey, "improve_and_variants")}
             disabled={isRegenerating}
             className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-indigo-100 text-indigo-500 hover:text-indigo-600 disabled:opacity-50 text-[10px] font-bold"
             title="Generate A/B Variants"
@@ -490,7 +490,7 @@ function StoryboardCard({
   copied?: boolean;
   isLoading?: boolean;
   productName?: string;
-  onRegenerate?: () => void;
+  onRegenerate?: (section: string, mode: "improve" | "improve_and_variants") => void;
   isRegenerating?: boolean;
 }) {
   const handleDownloadDoc = () => {
@@ -541,12 +541,22 @@ function StoryboardCard({
           )}
           {onRegenerate && (
             <button
-              onClick={onRegenerate}
+              onClick={() => onRegenerate("storyboard", "improve")}
               disabled={isRegenerating}
-              className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600 disabled:opacity-50"
-              title="Regenerate Storyboard"
+              className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-purple-100 text-purple-500 hover:text-purple-600 disabled:opacity-50 text-[10px] font-bold"
+              title="Perbaiki Storyboard"
             >
-              {isRegenerating ? <Loader2 size={14} className="animate-spin text-purple-500" /> : <RefreshCw size={14} />}
+              {isRegenerating ? <Loader2 size={11} className="animate-spin" /> : "✨ Perbaiki"}
+            </button>
+          )}
+          {onRegenerate && (
+            <button
+              onClick={() => onRegenerate("storyboard", "improve_and_variants")}
+              disabled={isRegenerating}
+              className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-indigo-100 text-indigo-500 hover:text-indigo-600 disabled:opacity-50 text-[10px] font-bold"
+              title="Generate A/B Variants"
+            >
+              🧪 A/B
             </button>
           )}
         </div>
@@ -813,13 +823,15 @@ function SalesPageCard({
   isLoading,
   onRegenerate,
   isRegenerating,
+  sectionKey = "landingPage",
 }: {
   landingPage: string;
   onCopy?: () => void;
   copied?: boolean;
   isLoading?: boolean;
-  onRegenerate?: () => void;
+  onRegenerate?: (section: string, mode: "improve" | "improve_and_variants") => void;
   isRegenerating?: boolean;
+  sectionKey?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -850,6 +862,26 @@ function SalesPageCard({
             className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600"
           >
             {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+          </button>
+        )}
+        {!isLoading && onRegenerate && (
+          <button
+            onClick={() => onRegenerate(sectionKey, "improve")}
+            disabled={isRegenerating}
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-purple-100 text-purple-500 hover:text-purple-600 disabled:opacity-50 text-[10px] font-bold"
+            title="Perbaiki versi ini"
+          >
+            {isRegenerating ? <Loader2 size={11} className="animate-spin" /> : "✨ Perbaiki"}
+          </button>
+        )}
+        {!isLoading && onRegenerate && (
+          <button
+            onClick={() => onRegenerate(sectionKey, "improve_and_variants")}
+            disabled={isRegenerating}
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-indigo-100 text-indigo-500 hover:text-indigo-600 disabled:opacity-50 text-[10px] font-bold"
+            title="Generate A/B Variants"
+          >
+            🧪 A/B
           </button>
         )}
       </div>
@@ -1189,12 +1221,22 @@ export default function GeneratorDashboard({
   // ==============================================
   const handleRegenerate = async (
     section: string,
-    originalContent: string,
-    mode: "improve" | "variant_a" | "variant_b" | "improve_and_variants" = "improve",
-    modifier?: string
+    mode: "improve" | "improve_and_variants"
   ) => {
     setRegeneratingSection(section);
     try {
+      // Get original content from current result state
+      const currentResult = result;
+      let originalContent = "";
+      if (section === "landingPage") originalContent = currentResult?.landingPage ?? "";
+      else if (section === "caption") originalContent = currentResult?.caption ?? "";
+      else if (section === "broadcast") originalContent = currentResult?.broadcast ?? "";
+      else if (section === "storyboard") {
+        originalContent = (currentResult?.storyboard ?? [])
+          .map((s) => `${s.shot}: ${s.visual} | ${s.audio}`)
+          .join("\n");
+      }
+
       const res = await fetch("/api/regenerate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1205,29 +1247,30 @@ export default function GeneratorDashboard({
           contentType: formData.contentType,
           targetAudience: targetAudienceValue || formData.productName,
           mode,
-          modifier,
           language: settings?.language ?? "id",
         }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Regenerate failed");
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+      }
 
       const data = await res.json();
 
       if (mode === "improve_and_variants" && Array.isArray(data)) {
-        // Show variant picker modal
         setRegeneratingSection(null);
         showVariantPicker(section, data);
         return;
       }
 
-      // Direct apply for single improve/variant
       const newContent = data.content;
-      if (newContent && result) {
-        setResult({ ...result, [section]: newContent });
+      if (newContent && currentResult) {
+        setResult({ ...currentResult, [section]: newContent });
         showToast(`${sectionLabel(section)} berhasil diperbarui!`);
       }
     } catch (err) {
-      showToast("Regenerasi gagal. Coba lagi.");
+      showToast(`Error: ${err instanceof Error ? err.message : "Regenerasi gagal"}`);
       if (process.env.NODE_ENV === "development") console.error("[Regenerate]", err);
     } finally {
       setRegeneratingSection(null);
@@ -1559,7 +1602,7 @@ export default function GeneratorDashboard({
                       isLoading={isLoading}
                       copied={copiedCard === "landingPage"}
                       onCopy={() => handleCopy("landingPage", landingPageText)}
-                      onRegenerate={result ? () => handleRegenerate("landingPage", result?.landingPage ?? "", "improve") : undefined}
+                      onRegenerate={result ? handleRegenerate : undefined}
                       isRegenerating={regeneratingSection === "landingPage"}
                     />
                   </div>
@@ -1576,7 +1619,7 @@ export default function GeneratorDashboard({
                       isLoading={isLoading}
                       copied={copiedCard === "caption"}
                       onCopy={() => handleCopy("caption", captionText)}
-                      onRegenerate={result ? (mode) => handleRegenerate("caption", result?.caption ?? "", mode as "improve" | "improve_and_variants") : undefined}
+                      onRegenerate={result ? handleRegenerate : undefined}
                       isRegenerating={regeneratingSection === "caption"}
                       sectionKey="caption"
                       content={
@@ -1597,7 +1640,7 @@ export default function GeneratorDashboard({
                       isLoading={isLoading}
                       copied={copiedCard === "broadcast"}
                       onCopy={() => handleCopy("broadcast", broadcastText)}
-                      onRegenerate={result ? (mode) => handleRegenerate("broadcast", result?.broadcast ?? "", mode as "improve" | "improve_and_variants") : undefined}
+                      onRegenerate={result ? handleRegenerate : undefined}
                       isRegenerating={regeneratingSection === "broadcast"}
                       sectionKey="broadcast"
                       content={
@@ -1627,7 +1670,7 @@ export default function GeneratorDashboard({
                       copied={copiedCard === "storyboard"}
                       onCopy={() => handleCopy("storyboard", storyboardText)}
                       productName={formData.productName}
-                      onRegenerate={result ? () => handleRegenerate("storyboard", result?.storyboard.map(s => `${s.shot}: ${s.visual} | ${s.audio}`).join("\n") || "", "improve") : undefined}
+                      onRegenerate={result ? handleRegenerate : undefined}
                       isRegenerating={regeneratingSection === "storyboard"}
                     />
                   </div>
