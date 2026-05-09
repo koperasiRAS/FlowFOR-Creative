@@ -18,6 +18,7 @@ import Image from "next/image";
 import ContentCalendar from "./ContentCalendar";
 import { useSettings } from "./SettingsContext";
 import { exportCampaignToZip, type ExportData } from "@/lib/zipExporter";
+import ScoreBreakdown from "./ScoreBreakdown";
 
 // ==============================================
 // TYPES
@@ -1402,6 +1403,20 @@ export default function GeneratorDashboard({
                       onCopy={() => handleCopy("vibeScore", vibeScoreText)}
                     />
                   </div>
+
+                  {/* Row 6b: AI Score Breakdown */}
+                  {result && (
+                    <div className="animate-enter-5 mt-4">
+                      <ScoreBreakdown
+                        overallScore={result.vibeScore?.score ?? 0}
+                        label={result.vibeScore?.label ?? ""}
+                        caption={result.caption}
+                        landingPage={result.landingPage}
+                        broadcast={result.broadcast}
+                        todoList={result.todoList}
+                      />
+                    </div>
+                  )}
 
                   {/* Row 7: Content Calendar */}
                   {result?.contentCalendar && (
