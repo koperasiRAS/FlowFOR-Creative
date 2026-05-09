@@ -44,7 +44,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setIsDark(true);
       }
     } catch (err) {
-      console.error("[SettingsContext] Gagal memuat settings:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("[SettingsContext] Gagal memuat settings:", err);
+      }
     }
   }, []);
 
@@ -67,7 +69,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem("flowfor_settings", JSON.stringify(next));
     } catch (err) {
-      console.error("[SettingsContext] Gagal simpan settings:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("[SettingsContext] Gagal simpan settings:", err);
+      }
     }
   }, []);
 

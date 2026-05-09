@@ -20,7 +20,9 @@ function useHistory() {
       const raw = localStorage.getItem("flowfor_history");
       if (raw) setHistory(JSON.parse(raw));
     } catch (err) {
-      console.error("[useHistory] Gagal memuat history:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("[useHistory] Gagal memuat history:", err);
+      }
     }
   }, []);
 
@@ -36,7 +38,9 @@ function useHistory() {
         try {
           localStorage.setItem("flowfor_history", JSON.stringify(updated));
         } catch (err) {
-          console.error("[useHistory] Gagal simpan history:", err);
+          if (process.env.NODE_ENV === "development") {
+            console.error("[useHistory] Gagal simpan history:", err);
+          }
         }
         return updated;
       });
@@ -50,7 +54,9 @@ function useHistory() {
       try {
         localStorage.setItem("flowfor_history", JSON.stringify(updated));
       } catch (err) {
-        console.error("[useHistory] Gagal hapus history:", err);
+        if (process.env.NODE_ENV === "development") {
+          console.error("[useHistory] Gagal hapus history:", err);
+        }
       }
       return updated;
     });
