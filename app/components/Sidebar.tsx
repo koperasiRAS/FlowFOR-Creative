@@ -8,11 +8,13 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
 } from "lucide-react";
 
 export type ActivePanel =
   | "dashboard"
   | "history"
+  | "guide"
   | "settings";
 
 interface SidebarProps {
@@ -28,6 +30,7 @@ const NAV_ITEMS: {
 }[] = [
   { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { id: "history", icon: History, label: "Project Campaign" },
+  { id: "guide", icon: BookOpen, label: "Panduan Aplikasi" },
   { id: "settings", icon: Settings, label: "Settings" },
 ];
 
@@ -56,7 +59,6 @@ export default function Sidebar({ activePanel, onPanelChange, onNewCampaign }: S
             <ChevronLeft size={12} className="text-gray-500" />
           )}
         </button>
-
 
         {/* New Campaign Button */}
         <div className={`p-3 border-b border-black/5 ${collapsed ? "flex justify-center" : ""}`}>
@@ -109,8 +111,6 @@ export default function Sidebar({ activePanel, onPanelChange, onNewCampaign }: S
             );
           })}
         </nav>
-
-
       </aside>
 
       {/* Mobile Bottom Tab Bar */}

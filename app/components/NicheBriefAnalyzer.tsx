@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Target, TrendingUp, AlertTriangle, Zap, CheckCircle2, Loader2, ChevronDown, ChevronUp, ExternalLink, Globe } from "lucide-react";
 import { useSettings } from "./SettingsContext";
 
@@ -108,6 +108,15 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "competitors" | "patterns" | "strategy">("overview");
   const [toast, setToast] = useState<string | null>(null);
+
+  // Auto-fill niche from campaign props
+  useEffect(() => {
+    if (productName) {
+      setNiche(productName);
+    } else if (description) {
+      setNiche(description.split(" ").slice(0, 6).join(" "));
+    }
+  }, [productName, description]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -300,7 +309,15 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
                       Copy
                     </button>
                     <a
-                      href={`https://${c.platform.toLowerCase()}.com/${c.username}`}
+                      href={(() => {
+                        const username = c.username;
+                        // If it's already a full URL, use it
+                        if (username.startsWith("http")) return username;
+                        const base = c.platform.toLowerCase();
+                        // YouTube uses /@username format
+                        if (base === "youtube") return `https://youtube.com/@${username.replace(/^@/, "")}`;
+                        return `https://${base}.com/${username}`;
+                      })()}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}

@@ -41,9 +41,10 @@ Beri strategic insights tentang sebuah niche/topik — siapa kompetitornya, patt
 ATURAN:
 1. Respond dengan HANYA JSON object mentah. TANPA markdown fences. TANPA backticks.
 2. Semua rekomendasi harus SPECIFIK dan ACTIONABLE — bukan generic advice.
-3. Competitor accounts harus ACCOUNTS NYATA yang populer di niche Indonesia.
+3. Competitor accounts: GIVE ACCOUNTS YANG PALING RELEVANT dan REALISTIS berdasarkan niche spesifik yang diminta. Buat username dan display name yang LOGIS dan WAJAR untuk niche tersebut. Tidak boleh generic/wrong niche.
 4. Content patterns harus dari analisis pattern yang sering muncul di niche tersebut.
 5. Insights harus dalam Bahasa Indonesia.
+6. Untuk competitor accounts: GUNAKAN imagination BERBASIS DATA. Contoh jika niche "Template Canva", competitor harus akun yang GAYA-NYA mirip creator template/design Indonesia yang realistis (bukan random names).
 
 OUTPUT JSON:
 {
@@ -197,14 +198,14 @@ CONTENT TYPE: ${contentType || "Umum"}
 
 TUGAS:
 1. Berikan overview niche (ukuran, kompetisi, cara monetize, opportunity)
-2. Rekomendasikan 3 competitor accounts di Indonesia yang harus di-follow
+2. Rekomendasikan 3 competitor accounts di Indonesia yang GAYA dan TOPIKNYA SANGAT MIRIP dengan produk/campaign ini
 3. Identifikasi 5 content patterns yang work di niche ini
 4. Berikan strategic insights: differentiation, quick win, common mistake, secret weapon
 5. Buat action plan 3 langkah yang harus dilakukan SEKARANG
 6. Beri overall score (0-100) dan entry difficulty
 
 PENTING:
-- competitor accounts harus account NYATA yang populer di Indonesia (bisa fiksi tapi harus realistic)
+- Competitor accounts: KETIK username yang LOGIS untuk niche "${safeNiche}" — username harus WAJAR, TOPIKNYA SESUAI, bukan random names. Contoh jika niche "Template Canva", gunakan gaya username akun creator template Indonesia yang realistis.
 - content patterns harus spesifik dan bisa langsung di-copy
 - action plan harus very actionable — hal yang bisa dilakukan dalam 1-2 hari
 - Semua dalam Bahasa Indonesia (kecuali username)`;

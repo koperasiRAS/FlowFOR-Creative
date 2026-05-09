@@ -1606,37 +1606,6 @@ export default function GeneratorDashboard({
                     </div>
                   )}
 
-                  {/* Row 6c: AI Campaign Advisor */}
-                  {result && (
-                    <div className="animate-enter-5 mt-4">
-                      <CampaignAdvisor
-                        result={result as Parameters<typeof CampaignAdvisor>[0]["result"]}
-                        onUpdateResult={setResult as (r: GenerateResult) => void}
-                      />
-                    </div>
-                  )}
-
-                  {/* Row 7: Content Calendar */}
-                  {result?.contentCalendar && (
-                    <div className="animate-enter-6 mt-4">
-                      <ContentCalendar
-                        productName={formData.productName}
-                        calendarData={result.contentCalendar}
-                      />
-                    </div>
-                  )}
-
-                  {/* Row 8: Campaign Roadmap Visual */}
-                  {result?.contentCalendar && result.contentCalendar.length > 0 && (
-                    <div className="animate-enter-6 mt-4">
-                      <CampaignRoadmap
-                        calendarData={result.contentCalendar}
-                        productName={formData.productName}
-                        vibeScore={result.vibeScore.score}
-                      />
-                    </div>
-                  )}
-
                   {/* Row 9: Niche Competitor Brief */}
                   <div className="animate-enter-7 mt-4">
                     <NicheBriefAnalyzer
@@ -1645,6 +1614,16 @@ export default function GeneratorDashboard({
                         contentType={formData.contentType}
                       />
                   </div>
+
+                  {/* Row 10: AI Campaign Advisor */}
+                  {result && (
+                    <div className="animate-enter-7 mt-4">
+                      <CampaignAdvisor
+                        result={result as Parameters<typeof CampaignAdvisor>[0]["result"]}
+                        onUpdateResult={setResult as (r: GenerateResult) => void}
+                      />
+                    </div>
+                  )}
 
                   {/* Action Bar */}
                   {result && (
