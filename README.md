@@ -151,6 +151,14 @@ This project was built with the following principles:
 
 MIT License — feel free to use, modify, and ship!
 
+> ⚠️ **Important:** The AI prompt engineering, business logic, and creative
+> strategy implemented in this project represent original creative work
+> developed for the **#JuaraVibeCoding** competition by Google.
+> While the MIT license permits personal use and modification, the core
+> prompt design and campaign strategy algorithms are intellectual property
+> of Rangga Danu Arta and should not be reproduced for competing products
+> or competitions without attribution.
+
 ---
 
 > Built with 💜 for the **#JuaraVibeCoding** competition

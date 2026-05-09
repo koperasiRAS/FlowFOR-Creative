@@ -22,7 +22,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
   background: linear-gradient(
     135deg,
     #ede9fe 0%,
