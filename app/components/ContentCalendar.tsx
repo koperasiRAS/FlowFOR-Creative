@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar } from "lucide-react";
+import { Calendar, ExternalLink, Download } from "lucide-react";
 import type { ContentCalendarEntry } from "./GeneratorDashboard";
 
 interface ContentCalendarProps {
@@ -83,6 +83,76 @@ export default function ContentCalendar({
       ? calendarData.find((e) => e.day === expandedDay) ?? null
       : null;
 
+  // Build Google Calendar URL
+  const exportToGoogleCalendar = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-indexed
+
+    if (calendarData.length === 0) return;
+
+    // For each entry, create a Google Calendar URL
+    const urls: string[] = [];
+    for (const entry of calendarData) {
+      const day = entry.day.toString().padStart(2, "0");
+      const month = (currentMonth + 1).toString().padStart(2, "0");
+      const dateStr = `${currentYear}${month}${day}`;
+      const title = encodeURIComponent(`[${entry.platform}] ${entry.type}: ${entry.topic}`);
+      const details = encodeURIComponent(`${entry.type} for ${productName}\n\n${entry.caption_hint}`);
+      const dates = `${dateStr}T090000/${dateStr}T100000`; // 09:00-10:00 local time
+      urls.push(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}`);
+    }
+
+    // Open first event in Google Calendar
+    if (urls.length > 0) {
+      window.open(urls[0], "_blank");
+    }
+  };
+
+  // Export as ICS file
+  const exportAsICS = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//FlowFOR Creative//Campaign Calendar//ID",
+      "CALSCALE:GREGORIAN",
+      "X-WR-CALNAME:FlowFOR Campaign - " + productName,
+    ];
+
+    for (const entry of calendarData) {
+      const day = entry.day.toString().padStart(2, "0");
+      const month = (currentMonth + 1).toString().padStart(2, "0");
+      const dateStr = `${currentYear}${month}${day}`;
+      const dtStart = `${dateStr}T090000`;
+      const dtEnd = `${dateStr}T100000`;
+
+      icsContent.push(
+        "BEGIN:VEVENT",
+        `DTSTART;TZID=Asia/Jakarta:${dtStart}`,
+        `DTEND;TZID=Asia/Jakarta:${dtEnd}`,
+        `SUMMARY:[${entry.platform}] ${entry.type} - ${entry.topic.slice(0, 50)}`,
+        `DESCRIPTION:${entry.caption_hint}`,
+        `LOCATION:${entry.platform}`,
+        `CATEGORIES:${entry.type}`,
+        "END:VEVENT"
+      );
+    }
+
+    icsContent.push("END:VCALENDAR");
+
+    const blob = new Blob([icsContent.join("\r\n")], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `FlowFOR-Campaign-${productName.replace(/[^a-zA-Z0-9]/g, "-")}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="glass-card p-5 relative group transition-all duration-200 lg:col-span-2">
       <div className="flex items-center justify-between mb-4">
@@ -98,6 +168,24 @@ export default function ContentCalendar({
           <p className="text-xs text-gray-400 hidden sm:block">
             {calendarData.length} posting days · 30-day plan
           </p>
+          {calendarData.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={exportAsICS}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-green-300 text-green-600 hover:bg-green-50 text-[10px] font-medium transition-colors"
+                title="Export ke Calendar (ICS)"
+              >
+                <Download size={10} /> Export ICS
+              </button>
+              <button
+                onClick={exportToGoogleCalendar}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-blue-300 text-blue-600 hover:bg-blue-50 text-[10px] font-medium transition-colors"
+                title="Buka di Google Calendar"
+              >
+                <ExternalLink size={10} /> Google Cal
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
