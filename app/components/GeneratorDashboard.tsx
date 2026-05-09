@@ -11,11 +11,13 @@ import {
   X,
   Share2,
   Download,
+  Package,
 } from "lucide-react";
 import Image from "next/image";
 
 import ContentCalendar from "./ContentCalendar";
 import { useSettings } from "./SettingsContext";
+import { exportCampaignToZip, type ExportData } from "@/lib/zipExporter";
 
 // ==============================================
 // TYPES
@@ -946,6 +948,31 @@ export default function GeneratorDashboard({
     setTimeout(() => setCopiedCard(null), 2000);
   };
 
+  const handleExportZip = async () => {
+    if (!result) return;
+    showToast("Memulai export...");
+    try {
+      const exportData: ExportData = {
+        productName: formData.productName || "Campaign",
+        contentType: formData.contentType,
+        landingPage: result.landingPage,
+        caption: result.caption,
+        broadcast: result.broadcast,
+        todoList: result.todoList,
+        storyboard: result.storyboard,
+        vibeScore: result.vibeScore,
+        contentCalendar: result.contentCalendar,
+        shootScript: result.shootScript,
+        nicheRecommendation: result.nicheRecommendation,
+      };
+      await exportCampaignToZip(exportData);
+      showToast("ZIP downloaded!");
+    } catch (err) {
+      console.error("[Export] Gagal export ZIP:", err);
+      showToast("Export gagal. Coba lagi.");
+    }
+  };
+
   // Convert tags to comma-separated string for API
   const targetAudienceValue = targetTags.join(", ");
 
@@ -1407,25 +1434,35 @@ export default function GeneratorDashboard({
                       </div>
 
                       {/* Right: Action Buttons */}
-                      <div className="flex gap-3 flex-wrap">
+                      <div className="flex gap-2.5 flex-wrap">
 
                         <button
                           onClick={() => setShowMobilePreview(true)}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-indigo-300
-                                     text-indigo-600 font-semibold text-sm hover:bg-indigo-50
+                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-indigo-300
+                                     text-indigo-600 font-semibold text-xs hover:bg-indigo-50
                                      active:scale-95 transition-all duration-200"
                         >
-                          <Smartphone size={15} />
-                          Preview Mobile
+                          <Smartphone size={14} />
+                          Preview
+                        </button>
+
+                        <button
+                          onClick={handleExportZip}
+                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-green-300
+                                     text-green-600 font-semibold text-xs hover:bg-green-50
+                                     active:scale-95 transition-all duration-200 shadow-sm"
+                        >
+                          <Package size={14} />
+                          Download ZIP
                         </button>
 
                         <button
                           onClick={handleLinkedInShare}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold text-sm
+                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs
                                      hover:bg-blue-700 active:scale-95 transition-all duration-200 shadow-sm"
                         >
-                          <Share2 size={15} />
-                          Share to LinkedIn
+                          <Share2 size={14} />
+                          Share
                         </button>
                       </div>
                     </div>
