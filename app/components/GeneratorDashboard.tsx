@@ -12,10 +12,14 @@ import {
   Share2,
   Download,
   Package,
+  RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
 
 import ContentCalendar from "./ContentCalendar";
+import CampaignRoadmap from "./CampaignRoadmap";
+import HashtagGenerator from "./HashtagGenerator";
+import NicheBriefAnalyzer from "./NicheBriefAnalyzer";
 import { useSettings } from "./SettingsContext";
 import { exportCampaignToZip, type ExportData } from "@/lib/zipExporter";
 import { generateCampaignPDF, type PDFData } from "@/lib/pdfExporter";
@@ -309,6 +313,9 @@ function BentoCard({
   pillBg = "bg-purple-100",
   pillText = "text-purple-700",
   pillLabel = "Card",
+  onRegenerate,
+  isRegenerating,
+  sectionKey,
 }: {
   title: string;
   icon: string;
@@ -321,6 +328,9 @@ function BentoCard({
   pillBg?: string;
   pillText?: string;
   pillLabel?: string;
+  onRegenerate?: (section: string, original: string, mode: "improve" | "improve_and_variants") => void;
+  isRegenerating?: boolean;
+  sectionKey?: string;
 }) {
   return (
     <div className={`glass-card p-5 relative group transition-all duration-200 ${className} ${colSpan}`}>
@@ -344,6 +354,26 @@ function BentoCard({
             ) : (
               <Copy size={14} />
             )}
+          </button>
+        )}
+        {!isLoading && onRegenerate && (
+          <button
+            onClick={() => onRegenerate("improve", "", "improve")}
+            disabled={isRegenerating}
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-purple-100 text-purple-500 hover:text-purple-600 disabled:opacity-50 text-[10px] font-bold"
+            title="Perbaiki versi ini"
+          >
+            {isRegenerating ? <Loader2 size={11} className="animate-spin" /> : "✨ Perbaiki"}
+          </button>
+        )}
+        {!isLoading && onRegenerate && (
+          <button
+            onClick={() => onRegenerate("improve_and_variants", "", "improve_and_variants")}
+            disabled={isRegenerating}
+            className="opacity-0 group-hover:opacity-100 transition-all duration-200 px-2 py-1 rounded-lg hover:bg-indigo-100 text-indigo-500 hover:text-indigo-600 disabled:opacity-50 text-[10px] font-bold"
+            title="Generate A/B Variants"
+          >
+            🧪 A/B
           </button>
         )}
       </div>
@@ -452,12 +482,16 @@ function StoryboardCard({
   copied,
   isLoading,
   productName,
+  onRegenerate,
+  isRegenerating,
 }: {
   shots: StoryboardItem[];
   onCopy?: () => void;
   copied?: boolean;
   isLoading?: boolean;
   productName?: string;
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
 }) {
   const handleDownloadDoc = () => {
     if (!shots.length) return;
@@ -503,6 +537,16 @@ function StoryboardCard({
               className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600"
             >
               {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+            </button>
+          )}
+          {onRegenerate && (
+            <button
+              onClick={onRegenerate}
+              disabled={isRegenerating}
+              className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600 disabled:opacity-50"
+              title="Regenerate Storyboard"
+            >
+              {isRegenerating ? <Loader2 size={14} className="animate-spin text-purple-500" /> : <RefreshCw size={14} />}
             </button>
           )}
         </div>
@@ -767,11 +811,15 @@ function SalesPageCard({
   onCopy,
   copied,
   isLoading,
+  onRegenerate,
+  isRegenerating,
 }: {
   landingPage: string;
   onCopy?: () => void;
   copied?: boolean;
   isLoading?: boolean;
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -850,6 +898,67 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
 }
 
 // ==============================================
+// VARIANT PICKER MODAL
+// ==============================================
+function VariantPickerModal({
+  section,
+  variants,
+  onSelect,
+  onClose,
+}: {
+  section: string;
+  variants: { mode: string; content: string; reason: string }[];
+  onSelect: (content: string) => void;
+  onClose: () => void;
+}) {
+  const label = section === "caption" ? "Caption" : section === "landingPage" ? "Sales Page" : section === "broadcast" ? "Broadcast" : section === "storyboard" ? "Storyboard" : section;
+  const modeLabel: Record<string, string> = {
+    improved: "✨ Versi Perbaiki",
+    variant_a: "🔵 Variant A",
+    variant_b: "🟣 Variant B",
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="glass-card p-5 max-w-lg w-full max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-gray-800 dark:text-gray-100">
+            🎯 Pilih Versi {label}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          Gemini generate 3 versi berbeda untuk {label.toLowerCase()} ini. Pilih yang paling cocok!
+        </p>
+        <div className="space-y-3">
+          {variants.map((v, i) => (
+            <button
+              key={i}
+              onClick={() => onSelect(v.content)}
+              className="w-full text-left p-4 rounded-xl border-2 border-gray-100 dark:border-white/10 hover:border-purple-400 transition-all bg-white/50 dark:bg-slate-800/50 hover:bg-purple-50/30 dark:hover:bg-purple-900/10"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-bold text-purple-600 dark:text-purple-400">
+                  {modeLabel[v.mode] || v.mode}
+                </span>
+              </div>
+              <pre className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap line-clamp-4 font-sans leading-relaxed">
+                {v.content}
+              </pre>
+              {v.reason && (
+                <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
+                  💡 {v.reason}
+                </p>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==============================================
 // MAIN PAGE
 // ==============================================
 export default function GeneratorDashboard({
@@ -871,6 +980,11 @@ export default function GeneratorDashboard({
   const [toast, setToast] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
+  const [variantModal, setVariantModal] = useState<{
+    section: string;
+    variants: { mode: string; content: string; reason: string }[];
+  } | null>(null);
 
   // ---- Watch initialResult from parent ----
   // prevRef lets us skip the initial render (undefined) and only react
@@ -1070,6 +1184,78 @@ export default function GeneratorDashboard({
     }
   };
 
+  // ==============================================
+  // REGENERATE SECTION
+  // ==============================================
+  const handleRegenerate = async (
+    section: string,
+    originalContent: string,
+    mode: "improve" | "variant_a" | "variant_b" | "improve_and_variants" = "improve",
+    modifier?: string
+  ) => {
+    setRegeneratingSection(section);
+    try {
+      const res = await fetch("/api/regenerate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section,
+          originalContent,
+          productName: formData.productName,
+          contentType: formData.contentType,
+          targetAudience: targetAudienceValue || formData.productName,
+          mode,
+          modifier,
+          language: settings?.language ?? "id",
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Regenerate failed");
+
+      const data = await res.json();
+
+      if (mode === "improve_and_variants" && Array.isArray(data)) {
+        // Show variant picker modal
+        setRegeneratingSection(null);
+        showVariantPicker(section, data);
+        return;
+      }
+
+      // Direct apply for single improve/variant
+      const newContent = data.content;
+      if (newContent && result) {
+        setResult({ ...result, [section]: newContent });
+        showToast(`${sectionLabel(section)} berhasil diperbarui!`);
+      }
+    } catch (err) {
+      showToast("Regenerasi gagal. Coba lagi.");
+      if (process.env.NODE_ENV === "development") console.error("[Regenerate]", err);
+    } finally {
+      setRegeneratingSection(null);
+    }
+  };
+
+  const showVariantPicker = (
+    section: string,
+    variants: { mode: string; content: string; reason: string }[]
+  ) => {
+    setVariantModal({ section, variants });
+  };
+
+  const selectVariant = (content: string) => {
+    if (result && variantModal) {
+      setResult({ ...result, [variantModal.section]: content });
+      showToast(`${sectionLabel(variantModal.section)} dipilih!`);
+    }
+    setVariantModal(null);
+  };
+
+  const sectionLabel = (s: string) =>
+    s === "caption" ? "Caption"
+      : s === "landingPage" ? "Sales Page"
+        : s === "broadcast" ? "Broadcast"
+          : s === "storyboard" ? "Storyboard"
+            : s;
+
 
   // ---- Derived content strings for copy ----
   const landingPageText = result?.landingPage ?? "";
@@ -1118,6 +1304,16 @@ export default function GeneratorDashboard({
       {/* Error Toast */}
       {errorMessage && (
         <ErrorToast message={errorMessage} onDismiss={() => setErrorMessage(null)} />
+      )}
+
+      {/* Variant Picker Modal */}
+      {variantModal && (
+        <VariantPickerModal
+          section={variantModal.section}
+          variants={variantModal.variants}
+          onSelect={selectVariant}
+          onClose={() => setVariantModal(null)}
+        />
       )}
 
       <div className="min-h-screen bg-transparent pt-3 md:pt-6 pb-8 px-3 md:px-4 transition-colors duration-300">
@@ -1363,6 +1559,8 @@ export default function GeneratorDashboard({
                       isLoading={isLoading}
                       copied={copiedCard === "landingPage"}
                       onCopy={() => handleCopy("landingPage", landingPageText)}
+                      onRegenerate={result ? () => handleRegenerate("landingPage", result?.landingPage ?? "", "improve") : undefined}
+                      isRegenerating={regeneratingSection === "landingPage"}
                     />
                   </div>
 
@@ -1378,6 +1576,9 @@ export default function GeneratorDashboard({
                       isLoading={isLoading}
                       copied={copiedCard === "caption"}
                       onCopy={() => handleCopy("caption", captionText)}
+                      onRegenerate={result ? (mode) => handleRegenerate("caption", result?.caption ?? "", mode as "improve" | "improve_and_variants") : undefined}
+                      isRegenerating={regeneratingSection === "caption"}
+                      sectionKey="caption"
                       content={
                         isLoading ? null : (
                           <pre className="whitespace-pre-wrap text-xs leading-relaxed font-sans text-gray-600">
@@ -1396,6 +1597,9 @@ export default function GeneratorDashboard({
                       isLoading={isLoading}
                       copied={copiedCard === "broadcast"}
                       onCopy={() => handleCopy("broadcast", broadcastText)}
+                      onRegenerate={result ? (mode) => handleRegenerate("broadcast", result?.broadcast ?? "", mode as "improve" | "improve_and_variants") : undefined}
+                      isRegenerating={regeneratingSection === "broadcast"}
+                      sectionKey="broadcast"
                       content={
                         isLoading ? null : (
                           <pre className="whitespace-pre-wrap text-xs leading-relaxed font-sans text-gray-600">
@@ -1423,6 +1627,8 @@ export default function GeneratorDashboard({
                       copied={copiedCard === "storyboard"}
                       onCopy={() => handleCopy("storyboard", storyboardText)}
                       productName={formData.productName}
+                      onRegenerate={result ? () => handleRegenerate("storyboard", result?.storyboard.map(s => `${s.shot}: ${s.visual} | ${s.audio}`).join("\n") || "", "improve") : undefined}
+                      isRegenerating={regeneratingSection === "storyboard"}
                     />
                   </div>
 
@@ -1467,6 +1673,35 @@ export default function GeneratorDashboard({
                       />
                     </div>
                   )}
+
+                  {/* Row 8: Campaign Roadmap Visual */}
+                  {result?.contentCalendar && result.contentCalendar.length > 0 && (
+                    <div className="animate-enter-6 mt-4">
+                      <CampaignRoadmap
+                        calendarData={result.contentCalendar}
+                        productName={formData.productName}
+                        vibeScore={result.vibeScore.score}
+                      />
+                    </div>
+                  )}
+
+                  {/* Row 9: Hashtag Generator */}
+                  {result && (
+                    <div className="animate-enter-7 mt-4">
+                      <HashtagGenerator
+                        productName={formData.productName}
+                        description={formData.description}
+                        contentType={formData.contentType}
+                        targetAudience={targetAudienceValue}
+                        platforms={settings?.platforms ?? ["Instagram", "TikTok"]}
+                      />
+                    </div>
+                  )}
+
+                  {/* Row 10: Niche Competitor Brief */}
+                  <div className="animate-enter-7 mt-4">
+                    <NicheBriefAnalyzer />
+                  </div>
 
                   {/* Action Bar */}
                   {result && (
