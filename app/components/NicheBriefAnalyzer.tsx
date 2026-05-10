@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Target, TrendingUp, Zap, CheckCircle2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useSettings } from "./SettingsContext";
+import AnimatedSelect from "./AnimatedSelect";
 
 interface NicheBriefData {
   nicheOverview: {
@@ -179,18 +180,19 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
               onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
               disabled={isLoading}
             />
-            <select
+            <AnimatedSelect
+              options={[
+                { value: "Produk Digital", label: "Produk Digital" },
+                { value: "Jasa/Service", label: "Jasa/Service" },
+                { value: "Konten Edukasi", label: "Konten Edukasi" },
+                { value: "Konten Monetisasi", label: "Konten Monetisasi" },
+                { value: "Niche Finder", label: "Niche Finder" },
+              ]}
               value={selectedContentType}
-              onChange={(e) => setSelectedContentType(e.target.value)}
-              className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 text-xs cursor-pointer w-36"
+              onChange={setSelectedContentType}
+              className="w-36 !text-xs"
               disabled={isLoading}
-            >
-              <option value="Produk Digital">Produk Digital</option>
-              <option value="Jasa/Service">Jasa/Service</option>
-              <option value="Konten Edukasi">Konten Edukasi</option>
-              <option value="Konten Monetisasi">Konten Monetisasi</option>
-              <option value="Niche Finder">Niche Finder</option>
-            </select>
+            />
           </div>
           <button
             onClick={handleAnalyze}
@@ -227,8 +229,10 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex items-center gap-1 bg-gray-50 dark:bg-slate-800/50 rounded-xl p-1 overflow-x-auto">
+          {expanded && (
+            <>
+              {/* Tabs */}
+              <div className="flex items-center gap-1 bg-gray-50 dark:bg-slate-800/50 rounded-xl p-1 overflow-x-auto">
             {(["overview", "patterns", "strategy"] as const).map((tab) => (
               <button
                 key={tab}
@@ -322,6 +326,8 @@ export default function NicheBriefAnalyzer({ productName = "", description = "",
                 </div>
               </div>
             </div>
+          )}
+            </>
           )}
 
           {/* Expand/Collapse toggle */}

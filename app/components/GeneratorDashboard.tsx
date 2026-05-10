@@ -24,6 +24,7 @@ import { exportCampaignToZip, type ExportData } from "@/lib/zipExporter";
 import { generateCampaignPDF, type PDFData } from "@/lib/pdfExporter";
 import ScoreBreakdown from "./ScoreBreakdown";
 import CampaignAdvisor from "./CampaignAdvisor";
+import AnimatedSelect from "./AnimatedSelect";
 
 // ==============================================
 // TYPES
@@ -1209,51 +1210,42 @@ export default function GeneratorDashboard({
                   <label htmlFor="bahasaOutput" className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Bahasa Output
                   </label>
-                  <select
+                  <AnimatedSelect
                     id="bahasaOutput"
-                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer text-xs"
+                    className="!text-xs"
+                    options={LANGUAGES}
                     value={settings.language}
-                    onChange={(e) => updateSettings({ ...settings, language: e.target.value })}
+                    onChange={(val) => updateSettings({ ...settings, language: val })}
                     disabled={isLoading}
-                  >
-                    {LANGUAGES.map((l) => (
-                      <option key={l.value} value={l.value}>{l.label}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 {/* Copy Length */}
                 <div>
                   <label htmlFor="panjangCopywriting" className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Sales Page
                   </label>
-                  <select
+                  <AnimatedSelect
                     id="panjangCopywriting"
-                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer text-xs"
+                    className="!text-xs"
+                    options={COPY_LENGTHS}
                     value={settings.copyLength}
-                    onChange={(e) => updateSettings({ ...settings, copyLength: e.target.value })}
+                    onChange={(val) => updateSettings({ ...settings, copyLength: val })}
                     disabled={isLoading}
-                  >
-                    {COPY_LENGTHS.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 {/* Caption Length */}
                 <div>
                   <label htmlFor="panjangCaption" className="block text-[11px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Panjang Caption
                   </label>
-                  <select
+                  <AnimatedSelect
                     id="panjangCaption"
-                    className="form-input appearance-none dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60 cursor-pointer text-xs"
+                    className="!text-xs"
+                    options={CAPTION_LENGTHS}
                     value={settings.captionLength}
-                    onChange={(e) => updateSettings({ ...settings, captionLength: e.target.value })}
+                    onChange={(val) => updateSettings({ ...settings, captionLength: val })}
                     disabled={isLoading}
-                  >
-                    {CAPTION_LENGTHS.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -1374,26 +1366,13 @@ export default function GeneratorDashboard({
                 <label htmlFor="contentType" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Jenis Konten
                 </label>
-                <select
+                <AnimatedSelect
                   id="contentType"
-                  className="form-input appearance-none cursor-pointer dark:bg-slate-800 dark:border-white/10 dark:text-gray-100 disabled:opacity-60"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a855f7' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 12px center",
-                    backgroundSize: "16px 16px",
-                    paddingRight: "36px",
-                  }}
+                  options={CONTENT_TYPES}
                   value={formData.contentType}
-                  onChange={(e) => handleChange("contentType", e.target.value)}
+                  onChange={(val) => handleChange("contentType", val)}
                   disabled={isLoading}
-                >
-                  {CONTENT_TYPES.map((ct) => (
-                    <option key={ct.value} value={ct.value}>
-                      {ct.label}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Niche Finder: Interest Hint */}
