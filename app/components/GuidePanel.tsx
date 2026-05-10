@@ -353,7 +353,7 @@ export default function GuidePanel({ onBack }: GuidePanelProps) {
           </div>
 
           <div className="text-center py-4">
-            <p className="text-[10px] text-gray-400 dark:text-gray-500">Built for #JuaraVibeCoding by Google • Built with Claude Code & Gemini Pro</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500">Built for #JuaraVibeCoding by Google</p>
           </div>
         </div>
       </div>

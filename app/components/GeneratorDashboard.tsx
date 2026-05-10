@@ -1423,7 +1423,7 @@ export default function GeneratorDashboard({
             </form>
 
             <p className="text-center text-[11px] text-gray-400">
-              AI-powered by Google Gemini 2.5 Flash • Built with Claude Code & Gemini Pro
+              AI-powered by Google Gemini 2.5 Flash
             </p>
           </div>
 
@@ -1630,7 +1630,7 @@ export default function GeneratorDashboard({
                         </div>
                         <div>
                           <p className="text-[12px] font-bold text-gray-800 dark:text-gray-100 leading-none">FlowFOR Creative</p>
-                          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Powered by FlowFOR #JuaraVibeCoding • Built with Claude Code & Gemini Pro</p>
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Powered by FlowFOR #JuaraVibeCoding</p>
                         </div>
                       </div>
 
