@@ -18,39 +18,25 @@ FlowFOR Creative generates a **full digital product launch system** powered by G
 | Feature | Description |
 |---------|-------------|
 | 📝 **Sales Page Copy** | Persuasive landing page with hook + 5 bullet points + CTA |
-| 📱 **Social Caption** | Hook + body + CTA + 3-5 hashtags for Reels/TikTok |
+| 📱 **Social Caption** | Hook + body + CTA + targeted hashtags for Reels/TikTok |
 | 💬 **Broadcast Message** | Soft-selling WA/Telegram message for community |
 | ✅ **Launch To-Do List** | 8+ actionable items (pre-launch → post-launch) |
-| 🎬 **Visual Storyboard** | 8-shot video plan with visual & audio cues |
-| 📄 **Shoot Script** | Scene-by-scene production guide with dialogue + camera |
-| 📅 **Content Calendar** | Monthly strategy grid with platform/day/type per post |
-| 🗺️ **Campaign Roadmap** | Visual 3-phase timeline: Pre-Launch → Launch Day → Post-Launch |
-| 🔥 **Vibe Score** | 0-100 viral potential rating with AI breakdown |
-| 🧠 **AI Score Breakdown** | 5-component analysis: Hook Power, Emotional Trigger, CTA Urgency, Copy Clarity, Engagement |
-| 📊 **Vibe Score History Chart** | Line chart tracking your campaign score trends |
-| 🆚 **Campaign Comparison** | Side-by-side comparison of 2 campaigns |
-| ✨ **AI Regeneration** | Per-section "Perbaiki" and "A/B Variants" buttons |
-| #️⃣ **Hashtag Generator** | 20+ optimized hashtags per platform (IG, TT, YT, WA) with virality score |
-| 🎯 **Niche Competitor Brief** | Strategic competitor analysis + content patterns + action plan |
-
-### 🔄 AI Regeneration (Premium)
-
-Every generated section has two intelligent regeneration options:
-
-- **✨ Perbaiki** — Improve the current version with stronger hooks and better CTA
-- **🧪 A/B Variants** — Generate 3 alternative versions (Improved + Variant A + Variant B) with a picker modal
+| 🎬 **Visual Storyboard** | Video plan with visual & audio cues |
+| 📄 **Shoot Script** | Scene-by-scene production guide aligned with storyboard (dialogue + camera angles) |
+| 📅 **Strategy Calendar** | Accurate monthly posting grid synced with real-world dates |
+| 👁️ **Vision AI Integration** | Upload an image for smart analysis (Visual Theme, Angle, Palette) used to empower the copywriting |
+| 🧠 **AI Advisor** | Chat directly with an AI expert to refine and brainstorm your generated campaign |
+| ⬇️ **Export & Share** | Download as ZIP, PDF Report, or Share to LinkedIn |
 
 ---
 
-## 🎨 UI Design
+## 🎨 Premium UI & UX
 
-- **Glassmorphism** aesthetic with frosted glass cards and backdrop blur
-- **Responsive mobile-first** layout (stacked on mobile, 2-column on desktop)
-- **Shimmer skeleton** loading animations with dynamic loading texts
-- **Decorative blobs** background with blue/purple/indigo color palette
-- **Plus Jakarta Sans** typography from Google Fonts
-- **Dark/Light mode** toggle with persistent settings
-- **Dark mode** detection via `prefers-color-scheme`
+- **Glassmorphism** aesthetic with frosted glass cards, dynamic backdrop blur, and smooth entrance animations.
+- **Butter-Smooth Hover Effects** (`hover:-translate-y-1 hover:shadow-xl`) on all result cards for an interactive feel.
+- **Responsive Grid Layout** adapting seamlessly from mobile to desktop.
+- **Shimmer Skeleton** loading states to keep users engaged while AI generates content.
+- **Dark/Light Mode** toggle with persistent settings and system detection.
 
 ---
 
@@ -61,10 +47,9 @@ Every generated section has two intelligent regeneration options:
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS v3.4 |
-| AI Engine | Google Gemini 2.5 Flash |
-| PDF Export | jsPDF (A4 landscape, 7-page branded report) |
+| AI Engine | Google Gemini 2.5 Flash (`@google/generative-ai`) |
+| PDF Export | jsPDF (A4 landscape report) |
 | ZIP Export | JSZip + FileSaver |
-| Charts | Chart.js + react-chartjs-2 |
 | Icons | Lucide React |
 | Deployment | Docker (Cloud Run) + Vercel |
 
@@ -105,50 +90,48 @@ Open [http://localhost:3000](http://localhost:3000)
 flowfor-creative/
 ├── app/
 │   ├── api/
-│   │   ├── generate/route.ts      ← Main launch kit generator
-│   │   ├── regenerate/route.ts   ← AI content regeneration
-│   │   ├── hashtags/route.ts     ← Hashtag optimizer
-│   │   └── niche-brief/route.ts  ← Niche competitor analyzer
+│   │   └── generate/route.ts      ← Unified AI generation & Vision AI endpoint
 │   ├── components/
 │   │   ├── GeneratorDashboard.tsx ← Main UI + all output cards
-│   │   ├── CampaignRoadmap.tsx   ← Visual 3-phase timeline
-│   │   ├── ContentCalendar.tsx   ← Monthly strategy grid
-│   │   ├── VibeChart.tsx         ← Score history line chart
-│   │   ├── CampaignCompare.tsx   ← 2-campaign comparison
-│   │   ├── ScoreBreakdown.tsx    ← 5-component AI analysis
-│   │   ├── HashtagGenerator.tsx   ← Platform hashtag optimizer
-│   │   ├── NicheBriefAnalyzer.tsx← Competitor brief analyzer
-│   │   ├── HistoryPanel.tsx      ← Project campaign history
-│   │   └── ...
+│   │   ├── ContentCalendar.tsx    ← Strategy grid with accurate date logic
+│   │   ├── CampaignAdvisor.tsx    ← Chat interface for refining results
+│   │   ├── HistoryPanel.tsx       ← Project campaign history
+│   │   └── SidebarWrapper.tsx     ← Responsive navigation
 │   ├── lib/
-│   │   ├── prompts.ts            ← Gemini AI system prompts
-│   │   ├── env.ts                ← Environment variable validation
-│   │   ├── pdfExporter.ts        ← Branded 7-page PDF export
-│   │   └── zipExporter.ts        ← Full campaign ZIP export
-│   ├── globals.css               ← Glassmorphism + shimmer styles
-│   ├── layout.tsx                ← Root layout with Google Font
-│   └── page.tsx                  ← App entry point
-├── lib/                          ← Shared utilities
-├── Dockerfile                   ← Cloud Run multi-stage build
-├── .env.example                 ← Environment variable template
+│   │   ├── prompts.ts             ← Strict Gemini AI system prompts
+│   │   ├── env.ts                 ← Environment variables & API retry logic
+│   │   ├── pdfExporter.ts         ← Branded PDF generation
+│   │   └── zipExporter.ts         ← Full campaign ZIP packager
+│   ├── globals.css                ← Glassmorphism + smooth scrolling
+│   ├── layout.tsx                 ← Root layout with Google Font
+│   └── page.tsx                   ← App entry point
+├── public/                        ← Static assets (logos)
+├── Dockerfile                     ← Cloud Run multi-stage build
+├── .env.example                   ← Environment variable template
 └── next.config.mjs
 ```
 
 ---
 
-## 🔑 Environment Variables
+## 🛡️ Security & Reliability
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GEMINI_API_KEY` | ✅ Yes | Google Gemini API key from AI Studio |
-
-Copy `.env.example` to `.env.local` and fill in your key.
+- **API Key Protection**: Secrets remain on the server (`process.env`), never exposed to the client.
+- **Auto-Retry & Rate Limiting**: Intelligent retries for API quotas (429) and in-memory rate limiting (10 req/min per IP).
+- **Sanitized Inputs**: Regex filtering (`/[<>{}\]]+/g`) to prevent prompt injection and XSS.
+- **Strict JSON Parsing**: Robust error handling for AI hallucinations or malformed JSON responses.
 
 ---
 
 ## 🌊 Deployment
 
-### Google Cloud Run (Recommended)
+### Vercel (Fastest)
+
+```bash
+npx vercel --prod
+```
+Set `GEMINI_API_KEY` in **Vercel Dashboard → Project Settings → Environment Variables**.
+
+### Google Cloud Run
 
 ```bash
 # Build with Docker
@@ -163,44 +146,6 @@ gcloud run deploy flowfor-creative \
   --port 3000 \
   --set-env-vars "GEMINI_API_KEY=your_key"
 ```
-
-### Vercel
-
-```bash
-npx vercel --prod
-```
-
-Set `GEMINI_API_KEY` in **Vercel Dashboard → Project Settings → Environment Variables**.
-
----
-
-## 🎯 For #JuaraVibeCoding
-
-Built with these core principles:
-
-| Principle | Implementation |
-|-----------|----------------|
-| **Speed** | From idea to complete launch kit in under 30 seconds |
-| **Quality** | Professional copy & strategy, not generic AI output |
-| **Design** | Glassmorphism UI with shimmer animations |
-| **Completeness** | End-to-end — form → AI → copy → export → history |
-| **Intelligence** | Vibe Score + AI breakdown for real content feedback |
-| **Regeneration** | Interactive AI-powered content improvement |
-| **Strategy** | Hashtag optimizer + niche competitor brief |
-| **Export** | Branded PDF report + ZIP for real-world utility |
-| **Deployability** | Cloud Run + Vercel ready, one-command deployment |
-
----
-
-## 🛡️ Security
-
-- All API keys use `process.env` — never hardcoded
-- Environment validation on startup (lib/env.ts)
-- Input sanitization + length limits on all API routes
-- Rate limiting (10-15 req/min per IP) on all endpoints
-- Safe error responses (no stack traces exposed)
-- `.env` files excluded from git tracking
-- Content Security Policy ready for production
 
 ---
 
