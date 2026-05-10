@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
         const [, mimeType, base64Data] = mimeMatch;
 
         const visionModel = genAI.getGenerativeModel({
-          model: "gemini-2.5-flash",
+          model: "gemini-3-flash",
           systemInstruction: IMAGE_ANALYSIS_SYSTEM_PROMPT,
           safetySettings,
           generationConfig: { responseMimeType: "application/json" },
@@ -278,7 +278,7 @@ PANJANG CAPTION SAAT INI: ${captionLen}
 WAJIB PATUHI PANJANG DI ATAS. JANGAN LEBIH, JANGAN KURANG.`;
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash",
       systemInstruction: dynamicSystemPrompt,
       safetySettings,
       generationConfig: {
