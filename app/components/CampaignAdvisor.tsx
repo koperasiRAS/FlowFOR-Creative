@@ -120,30 +120,39 @@ export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps
   );
 
   return (
-    <div className={`glass-card transition-all duration-200 ${expanded ? "h-auto" : ""}`}>
+    <div className="glass-card p-5 transition-all duration-200">
       {/* Header */}
       <div
-        className="flex items-center justify-between mb-3 cursor-pointer"
+        className="flex items-center justify-between mb-4 cursor-pointer pb-3 border-b border-gray-100 dark:border-white/10"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-2">
-          <span className="inline-block bg-blue-100 text-blue-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-            AI Advisor
-          </span>
-          <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm flex items-center gap-1.5">
-            <MessageCircle size={14} className="text-blue-500" />
-            Campaign Advisor
-          </h3>
+          <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+            <MessageCircle size={16} className="text-blue-500" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm">
+              AI Campaign Advisor
+            </h3>
+            <p className="text-[10px] text-gray-400">Tanya apa saja soal launch campaign kamu</p>
+          </div>
         </div>
-        <button className="text-[10px] text-gray-400 hover:text-blue-500 transition-colors">
-          {expanded ? "▲ Tutup" : "▼ Buka"}
-        </button>
+        <div className="flex items-center gap-2">
+          {expanded && (
+            <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-semibold">
+              {messages.length - 1} pesan
+            </span>
+          )}
+          <button className="text-[10px] text-gray-400 hover:text-blue-500 transition-colors">
+            {expanded ? "▲ Tutup" : "▼ Buka"}
+          </button>
+        </div>
       </div>
 
       {expanded && (
-        <div className="space-y-3 animate-slide-up">
+        <div className="space-y-4">
           {/* Chat Messages */}
-          <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin">
             {messages.map((msg) => (
               <div
                 key={msg.id}
