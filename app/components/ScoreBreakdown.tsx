@@ -17,7 +17,7 @@ interface ScoreBreakdownProps {
   emotionalTrigger?: number;
   ctaUrgency?: number;
   copyClarity?: number;
-  engagement?: number;
+  engagementPotential?: number;
 }
 
 interface ComponentScore {
@@ -196,7 +196,7 @@ export default function ScoreBreakdown({
   emotionalTrigger: aiEmotionalTrigger,
   ctaUrgency: aiCtaUrgency,
   copyClarity: aiCopyClarity,
-  engagement: aiEngagement,
+  engagementPotential: aiEngagement,
 }: ScoreBreakdownProps) {
   const { isDark } = useSettings();
   const [expanded, setExpanded] = useState(false);
@@ -208,7 +208,7 @@ export default function ScoreBreakdown({
   const emotionalTrigger = aiEmotionalTrigger != null ? aiEmotionalTrigger : analyzeEmotionalTrigger([caption, landingPage, broadcast].join(" "));
   const ctaUrgency = aiCtaUrgency != null ? aiCtaUrgency : analyzeCTAUrgency(caption, landingPage, broadcast);
   const copyClarity = aiCopyClarity != null ? aiCopyClarity : analyzeCopyClarity([caption, landingPage, broadcast].join(" "));
-  const engagement = aiEngagement != null ? aiEngagement : analyzeEngagementPotential(caption);
+  const engagementPotential = aiEngagement != null ? aiEngagement : analyzeEngagementPotential(caption);
 
   const components: ComponentScore[] = [
     {
@@ -262,12 +262,12 @@ export default function ScoreBreakdown({
     {
       name: "Engagement Potential",
       icon: <MessageSquare size={13} className="text-green-500" />,
-      score: engagement,
+      score: engagementPotential,
       maxScore: 100,
       description: "Kemampuan konten untuk mendorong interaction dan sharing",
-      suggestion: engagement < 50
+      suggestion: engagementPotential < 50
         ? "Tambahkan minimal 3-5 hashtag yang relevant, satu pertanyaan, dan ajakan share"
-        : engagement < 75
+        : engagementPotential < 75
         ? "Engagement sudah baik, tapi tambahkan hashtag yang lebih specific dan niche"
         : "Engagement potential sangat tinggi! Konten ini kemungkinan besar akan viral",
     },
@@ -276,7 +276,7 @@ export default function ScoreBreakdown({
   // Weighted overall score from components
   const calculatedScore = Math.round(
     (hookPower * 0.25 + emotionalTrigger * 0.20 + ctaUrgency * 0.20 +
-      copyClarity * 0.20 + engagement * 0.15)
+      copyClarity * 0.20 + engagementPotential * 0.15)
   );
 
   return (

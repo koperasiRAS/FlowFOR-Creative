@@ -45,7 +45,7 @@ export default function VibeChart({ history }: VibeChartProps) {
     const date = new Date(item.createdAt);
     return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
   });
-  const scores = sortedHistory.map((item) => item.result?.vibeScore?.score ?? 0);
+  const scores = sortedHistory.map((item) => item.result?.vibeScore?.vibeScore ?? 0);
 
   const isEmpty = history.length === 0;
 

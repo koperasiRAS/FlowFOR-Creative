@@ -15,7 +15,7 @@ export interface PDFData {
   broadcast: string;
   todoList: string[];
   storyboard: { shot: string; visual: string; audio: string }[];
-  vibeScore: { score: number; label: string; reasons: string[] };
+  vibeScore: { vibeScore: number; label: string; reasons: string[]; quickFix?: string };
   contentCalendar?: {
     day: number;
     date: string;
@@ -158,7 +158,7 @@ export async function generateCampaignPDF(data: PDFData): Promise<Blob> {
 
   // Vibe Score Card
   y += 8;
-  const score = data.vibeScore?.score ?? 0;
+  const score = data.vibeScore?.vibeScore ?? 0;
   const label = data.vibeScore?.label ?? "";
   const scoreColorHex = scoreColor(score);
 

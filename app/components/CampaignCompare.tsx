@@ -244,7 +244,7 @@ export default function CampaignCompare({ history, onLoadCampaign }: CampaignCom
                       {formatDate(selected.item.createdAt)}
                     </p>
                     <p className="text-[10px] text-purple-600 dark:text-purple-400 mt-0.5">
-                      Vibe Score: {selected.item.result?.vibeScore?.score ?? "?"}/100
+                      Vibe Score: {selected.item.result?.vibeScore?.vibeScore ?? "?"}/100
                     </p>
                     <button
                       onClick={() => toggleSelect(selected.item)}
@@ -296,31 +296,31 @@ export default function CampaignCompare({ history, onLoadCampaign }: CampaignCom
               🔥 Vibe Score Comparison
             </p>
             <ScoreMiniBar
-              scoreA={itemA.item.result?.vibeScore?.score ?? 0}
-              scoreB={itemB.item.result?.vibeScore?.score ?? 0}
+              scoreA={itemA.item.result?.vibeScore?.vibeScore ?? 0}
+              scoreB={itemB.item.result?.vibeScore?.vibeScore ?? 0}
               winner={compareScore(
-                itemA.item.result?.vibeScore?.score ?? 0,
-                itemB.item.result?.vibeScore?.score ?? 0
+                itemA.item.result?.vibeScore?.vibeScore ?? 0,
+                itemB.item.result?.vibeScore?.vibeScore ?? 0
               )}
             />
             <div className="grid grid-cols-2 gap-4 mt-3">
               <div className="text-center p-2 bg-white/60 dark:bg-slate-800/60 rounded-xl">
                 <p className={`text-lg font-black ${
-                  compareScore(itemA.item.result?.vibeScore?.score ?? 0, itemB.item.result?.vibeScore?.score ?? 0) === "A"
+                  compareScore(itemA.item.result?.vibeScore?.vibeScore ?? 0, itemB.item.result?.vibeScore?.vibeScore ?? 0) === "A"
                     ? "text-green-500"
                     : "text-gray-500"
                 }`}>
-                  {itemA.item.result?.vibeScore?.score ?? 0}
+                  {itemA.item.result?.vibeScore?.vibeScore ?? 0}
                 </p>
                 <p className="text-[10px] text-gray-400">{itemA.item.result?.vibeScore?.label ?? ""}</p>
               </div>
               <div className="text-center p-2 bg-white/60 dark:bg-slate-800/60 rounded-xl">
                 <p className={`text-lg font-black ${
-                  compareScore(itemA.item.result?.vibeScore?.score ?? 0, itemB.item.result?.vibeScore?.score ?? 0) === "B"
+                  compareScore(itemA.item.result?.vibeScore?.vibeScore ?? 0, itemB.item.result?.vibeScore?.vibeScore ?? 0) === "B"
                     ? "text-green-500"
                     : "text-gray-500"
                 }`}>
-                  {itemB.item.result?.vibeScore?.score ?? 0}
+                  {itemB.item.result?.vibeScore?.vibeScore ?? 0}
                 </p>
                 <p className="text-[10px] text-gray-400">{itemB.item.result?.vibeScore?.label ?? ""}</p>
               </div>

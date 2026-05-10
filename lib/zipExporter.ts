@@ -16,7 +16,7 @@ export interface ExportData {
   broadcast: string;
   todoList: string[];
   storyboard: { shot: string; visual: string; audio: string }[];
-  vibeScore: { score: number; label: string; reasons: string[] };
+  vibeScore: { vibeScore: number; label: string; reasons: string[]; quickFix?: string };
   contentCalendar?: {
     day: number;
     date: string;
@@ -150,7 +150,7 @@ ${data.storyboard
     `VIBE SCORE — ${data.productName}
 ${"=".repeat(60)}
 
-SCORE: ${data.vibeScore.score}/100
+SCORE: ${data.vibeScore.vibeScore}/100
 LABEL: ${data.vibeScore.label}
 
 ANALYSIS:

@@ -36,14 +36,15 @@ interface StoryboardItem {
 }
 
 interface VibeScoreData {
-  score: number;
+  vibeScore: number;
   hookPower: number;
   emotionalTrigger: number;
   ctaUrgency: number;
   copyClarity: number;
-  engagement: number;
+  engagementPotential: number;
   label: string;
   reasons: string[];
+  quickFix: string;
 }
 
 export interface GenerateResult {
@@ -700,17 +701,17 @@ function VibeScoreCard({
 }) {
   const { isDark } = useSettings();
   const [displayScore, setDisplayScore] = useState(0);
-  const colorClass = score.score <= 40 ? "text-red-500" : score.score <= 70 ? "text-yellow-500" : "text-green-500";
-  const ringColorClass = score.score <= 40 ? "#ef4444" : score.score <= 70 ? "#eab308" : "#22c55e";
-  const bgClass = score.score <= 40 ? "bg-red-50" : score.score <= 70 ? "bg-yellow-50" : "bg-green-50";
+  const colorClass = score.vibeScore <= 40 ? "text-red-500" : score.vibeScore <= 70 ? "text-yellow-500" : "text-green-500";
+  const ringColorClass = score.vibeScore <= 40 ? "#ef4444" : score.vibeScore <= 70 ? "#eab308" : "#22c55e";
+  const bgClass = score.vibeScore <= 40 ? "bg-red-50" : score.vibeScore <= 70 ? "bg-yellow-50" : "bg-green-50";
 
   // Count-up animation
   useEffect(() => {
-    if (isLoading || score.score === 0) return;
+    if (isLoading || score.vibeScore === 0) return;
     setDisplayScore(0);
     const duration = 1500;
     const startTime = Date.now();
-    const target = score.score;
+    const target = score.vibeScore;
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
@@ -723,10 +724,10 @@ function VibeScoreCard({
       }
     };
     requestAnimationFrame(animate);
-  }, [score.score, isLoading]);
+  }, [score.vibeScore, isLoading]);
 
   // Conic gradient for ring: percentage filled with color, rest gray
-  const fillDeg = (score.score / 100) * 360;
+  const fillDeg = (score.vibeScore / 100) * 360;
   const ringBg = `conic-gradient(${ringColorClass} 0deg ${fillDeg}deg, ${isDark ? "#334155" : "#e5e7eb"} ${fillDeg}deg 360deg)`;
 
   return (
@@ -786,6 +787,29 @@ function VibeScoreCard({
                 </li>
               ))}
             </ul>
+
+            {/* Formula display */}
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10">
+              <p className="text-[10px] text-gray-400 font-medium mb-1.5 flex items-center gap-1">
+                📐 Formula: <span className="font-mono">hookPower×0.25 + emotionalTrigger×0.20 + ctaUrgency×0.20 + copyClarity×0.20 + engagementPotential×0.15</span>
+              </p>
+              <div className="grid grid-cols-5 gap-1.5">
+                {[
+                  { label: "Hook", value: score.hookPower, weight: 25 },
+                  { label: "Emotional", value: score.emotionalTrigger, weight: 20 },
+                  { label: "CTA", value: score.ctaUrgency, weight: 20 },
+                  { label: "Clarity", value: score.copyClarity, weight: 20 },
+                  { label: "Engage", value: score.engagementPotential, weight: 15 },
+                ].map(({ label, value, weight }) => (
+                  <div key={label} className="text-center bg-gray-50 dark:bg-white/5 rounded-lg py-1.5 px-1">
+                    <div className={"text-xs font-bold " + (value >= 70 ? "text-green-500" : value >= 50 ? "text-yellow-500" : "text-red-400")}>
+                      {value}
+                    </div>
+                    <div className="text-[9px] text-gray-400">{label}×{weight}%</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1052,8 +1076,48 @@ export default function GeneratorDashboard({
   // Convert tags to comma-separated string for API
   const targetAudienceValue = targetTags.join(", ");
 
+  // ==============================================
+  // INPUT VALIDATION (FIX #2)
+  // ==============================================
+  function validateCampaignInput(data: typeof formData): Record<string, string> {
+    const errors: Record<string, string> = {};
+
+    if (!data.productName.trim()) {
+      errors.productName = "Nama produk wajib diisi.";
+    } else if (data.productName.trim().length < 3) {
+      errors.productName = "Nama produk minimal 3 karakter.";
+    }
+
+    if (!data.description.trim()) {
+      errors.description = "Deskripsi produk wajib diisi.";
+    } else {
+      const wordCount = data.description.trim().split(/\s+/).filter(Boolean).length;
+      if (wordCount < 10) {
+        errors.description = `Deskripsi terlalu singkat (${wordCount}/10 kata). Tambahkan detail agar AI bisa 生成 konten yang lebih baik.`;
+      }
+      // Repeated character detection
+      if (/(.)\1{5,}/.test(data.description)) {
+        errors.description = "Deskripsi mengandung karakter berulang yang tidak bermakna. Mohon tuliskan informasi produk yang sebenarnya.";
+      }
+      // Gibberish: long runs of consonants without vowels
+      if (/[bcdfghjklmnpqrstvwxyz]{6,}/gi.test(data.description)) {
+        errors.description = "Deskripsi mengandung karakter tidak terbaca. Mohon gunakan kata-kata yang sebenarnya untuk produk kamu.";
+      }
+    }
+
+    return errors;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ---- CLIENT-SIDE VALIDATION ----
+    const validationErrors = validateCampaignInput(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrorMessage("⚠️ " + Object.values(validationErrors)[0]);
+      return;
+    }
+
     setIsLoading(true);
     setResult(null);
     setErrorMessage(null);
@@ -1117,7 +1181,7 @@ export default function GeneratorDashboard({
   const storyboardText =
     result?.storyboard.map((s) => `${s.shot}\nVisual: ${s.visual}\nAudio: ${s.audio}`).join("\n\n") ?? "";
   const vibeScoreText = result
-    ? `Vibe Score: ${result.vibeScore.score}/100\nLabel: ${result.vibeScore.label}\n\nReasons:\n${result.vibeScore.reasons.map((r, i) => `${i + 1}. ${r}`).join("\n")}`
+    ? `Vibe Score: ${result.vibeScore.vibeScore}/100\nLabel: ${result.vibeScore.label}\n\nReasons:\n${result.vibeScore.reasons.map((r, i) => `${i + 1}. ${r}`).join("\n")}${result.vibeScore.quickFix ? `\n\nQuick Fix: ${result.vibeScore.quickFix}` : ""}`
     : "";
 
   const showNicheFinder = formData.contentType === "Niche Finder";
@@ -1584,18 +1648,40 @@ export default function GeneratorDashboard({
                   {/* Row 7: Vibe Score */}
                   <div className="animate-enter-5">
                     <VibeScoreCard
-                      score={result?.vibeScore ?? { score: 0, hookPower: 0, emotionalTrigger: 0, ctaUrgency: 0, copyClarity: 0, engagement: 0, label: "", reasons: [] }}
+                      score={result?.vibeScore ?? { vibeScore: 0, hookPower: 0, emotionalTrigger: 0, ctaUrgency: 0, copyClarity: 0, engagementPotential: 0, label: "", reasons: [], quickFix: "" }}
                       isLoading={isLoading}
                       copied={copiedCard === "vibeScore"}
                       onCopy={() => handleCopy("vibeScore", vibeScoreText)}
                     />
                   </div>
 
+                  {/* Row 7b: Quick Fix Card (shown when score < 70) */}
+                  {result && result.vibeScore && result.vibeScore.vibeScore < 70 && result.vibeScore.quickFix && (
+                    <div className="glass-card p-4 border-l-4 border-amber-400 animate-enter-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="inline-block bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                          ⚡ Quick Fix
+                        </span>
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
+                          Cara Cepat Meningkatkan Score
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+                        {result.vibeScore.quickFix}
+                      </p>
+                      {result.vibeScore.vibeScore < 40 && (
+                        <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1">
+                          💡 Tip: Perbaiki komponen dengan score terendah dulu untuk dampak terbesar.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Row 6b: AI Score Breakdown */}
                   {result && (
                     <div className="animate-enter-5 mt-4">
                       <ScoreBreakdown
-                        overallScore={result.vibeScore?.score ?? 0}
+                        overallScore={result.vibeScore?.vibeScore ?? 0}
                         label={result.vibeScore?.label ?? ""}
                         caption={result.caption}
                         landingPage={result.landingPage}
@@ -1605,7 +1691,7 @@ export default function GeneratorDashboard({
                         emotionalTrigger={result.vibeScore?.emotionalTrigger}
                         ctaUrgency={result.vibeScore?.ctaUrgency}
                         copyClarity={result.vibeScore?.copyClarity}
-                        engagement={result.vibeScore?.engagement}
+                        engagementPotential={result.vibeScore?.engagementPotential}
                       />
                     </div>
                   )}

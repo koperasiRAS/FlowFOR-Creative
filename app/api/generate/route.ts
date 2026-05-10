@@ -45,14 +45,15 @@ interface StoryboardItem {
 }
 
 interface VibeScore {
-  score: number;
+  vibeScore: number;
   hookPower: number;
   emotionalTrigger: number;
   ctaUrgency: number;
   copyClarity: number;
-  engagement: number;
+  engagementPotential: number;
   label: string;
   reasons: string[];
+  quickFix: string;
 }
 
 export interface GenerateRequestBody {
@@ -347,29 +348,33 @@ PENTING:
         throw Object.assign(new Error("Gemini response is missing required fields."), { status: 500 });
       }
 
-      // Validate and recalculate vibeScore server-side (safeguard)
-      const vs = parsed.vibeScore;
-      const hp = Math.max(0, Math.min(100, Math.round(Number(vs.hookPower) || 0)));
-      const et = Math.max(0, Math.min(100, Math.round(Number(vs.emotionalTrigger) || 0)));
-      const cu = Math.max(0, Math.min(100, Math.round(Number(vs.ctaUrgency) || 0)));
-      const cc = Math.max(0, Math.min(100, Math.round(Number(vs.copyClarity) || 0)));
-      const eng = Math.max(0, Math.min(100, Math.round(Number(vs.engagement) || 0)));
-      const recalcScore = Math.round(hp * 0.25 + et * 0.20 + cu * 0.20 + cc * 0.20 + eng * 0.15);
+      // Defensive parser: normalize and validate vibeScore fields
+      const rawVs = parsed.vibeScore as unknown as Record<string, unknown>;
+      const hp = Math.max(0, Math.min(100, Math.round(Number(rawVs.hookPower) || 0)));
+      const et = Math.max(0, Math.min(100, Math.round(Number(rawVs.emotionalTrigger) || 0)));
+      const cu = Math.max(0, Math.min(100, Math.round(Number(rawVs.ctaUrgency) || 0)));
+      const cc = Math.max(0, Math.min(100, Math.round(Number(rawVs.copyClarity) || 0)));
+      const ep = Math.max(0, Math.min(100, Math.round(Number(rawVs.engagementPotential || rawVs.engagement) || 0)));
+
+      // Enforce mathematical consistency: vibeScore = weighted average
+      const recalcScore = Math.round(hp * 0.25 + et * 0.20 + cu * 0.20 + cc * 0.20 + ep * 0.15);
       const recalcLabel =
-        recalcScore >= 80 ? "High Viral Potential"
-        : recalcScore >= 60 ? "Solid Launch Ready"
-        : recalcScore >= 40 ? "Good Foundation"
-        : "Needs Work";
+        recalcScore >= 81 ? "High Viral Potential"
+        : recalcScore >= 66 ? "Good"
+        : recalcScore >= 46 ? "Decent"
+        : recalcScore >= 26 ? "Needs Work"
+        : "Very Poor";
 
       parsed.vibeScore = {
-        score: recalcScore,
+        vibeScore: recalcScore,
         hookPower: hp,
         emotionalTrigger: et,
         ctaUrgency: cu,
         copyClarity: cc,
-        engagement: eng,
-        label: vs.label || recalcLabel,
-        reasons: Array.isArray(vs.reasons) ? vs.reasons : [],
+        engagementPotential: ep,
+        label: (rawVs.label as string) || recalcLabel,
+        reasons: Array.isArray(rawVs.reasons) ? (rawVs.reasons as string[]) : [],
+        quickFix: typeof rawVs.quickFix === "string" ? rawVs.quickFix : "Tambahkan urgency words dan CTA yang jelas untuk meningkatkan Vibe Score.",
       };
 
       if (imageAnalysis) {

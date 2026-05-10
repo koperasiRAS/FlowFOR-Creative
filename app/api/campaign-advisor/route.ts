@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         emotionalTrigger?: number;
         ctaUrgency?: number;
         copyClarity?: number;
-        engagement?: number;
+        engagementPotential?: number;
         todoList?: string[];
         storyboard?: { shot: string; visual: string; audio: string }[];
       };
@@ -129,7 +129,7 @@ ${vs.hookPower != null ? `- Hook Power: ${vs.hookPower}/100` : ""}
 ${vs.emotionalTrigger != null ? `- Emotional Trigger: ${vs.emotionalTrigger}/100` : ""}
 ${vs.ctaUrgency != null ? `- CTA Urgency: ${vs.ctaUrgency}/100` : ""}
 ${vs.copyClarity != null ? `- Copy Clarity: ${vs.copyClarity}/100` : ""}
-${vs.engagement != null ? `- Engagement: ${vs.engagement}/100` : ""}
+${vs.engagementPotential != null ? `- Engagement Potential: ${vs.engagementPotential}/100` : ""}
 ${vs.landingPage ? `- Sales Page:\n${vs.landingPage.slice(0, 500)}` : ""}
 ${vs.caption ? `- Caption:\n${vs.caption.slice(0, 500)}` : ""}
 ${vs.broadcast ? `- Broadcast:\n${vs.broadcast.slice(0, 500)}` : ""}
