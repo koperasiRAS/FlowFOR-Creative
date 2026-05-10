@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { env } from "@/lib/env";
+import { getRandomGeminiKey } from "@/lib/env";
 
 // ==============================================
 // RATE LIMITER
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = env.GEMINI_API_KEY;
+    const apiKey = getRandomGeminiKey();
 
     // Parse body
     let body: { imageData: string; productContext?: string; contentType?: string };

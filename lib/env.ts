@@ -17,7 +17,6 @@ export const env = new Proxy({} as Record<EnvVar, string>, {
     if (requiredEnvVars.includes(prop as EnvVar)) {
       const value = process.env[prop];
       if (!value || value.trim() === "") {
-        // If we are building, we just warn to allow build to succeed.
         if (process.env.npm_lifecycle_event === "build") {
           console.warn(`[FlowFOR] Warning: Missing environment variable during build: ${prop}`);
           return "";
@@ -32,3 +31,20 @@ export const env = new Proxy({} as Record<EnvVar, string>, {
     return process.env[prop];
   }
 });
+
+/**
+ * Returns a random Gemini API key from the GEMINI_API_KEY environment variable.
+ * Supports a single key or a comma-separated list of keys for API Key Rotation.
+ */
+export function getRandomGeminiKey(): string {
+  const keysStr = env.GEMINI_API_KEY;
+  if (!keysStr) return "";
+  
+  // Split by comma and remove empty spaces
+  const keys = keysStr.split(",").map(k => k.trim()).filter(Boolean);
+  if (keys.length === 0) return "";
+  
+  // Pick a random key
+  const randomIndex = Math.floor(Math.random() * keys.length);
+  return keys[randomIndex];
+}

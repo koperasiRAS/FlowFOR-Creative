@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { SYSTEM_PROMPT, IMAGE_ANALYSIS_SYSTEM_PROMPT } from "@/lib/prompts";
-import { env } from "@/lib/env";
+import { getRandomGeminiKey } from "@/lib/env";
 
 // ==============================================
 // RATE LIMITER — In-memory, 10 req/min/IP
@@ -135,8 +135,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Read API key (validated at startup via lib/env.ts)
-    const apiKey = env.GEMINI_API_KEY;
+    // 2. Read API key — picks a random key from the pool for load balancing
+    const apiKey = getRandomGeminiKey();
 
     // 3. Parse request body
     let body: GenerateRequestBody;

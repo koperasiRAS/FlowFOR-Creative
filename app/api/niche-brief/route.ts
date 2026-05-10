@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { env } from "@/lib/env";
+import { getRandomGeminiKey } from "@/lib/env";
 
 // ==============================================
 // RATE LIMITER
@@ -55,39 +55,11 @@ OUTPUT JSON:
   },
   "contentPatterns": [
     {
-      "pattern": "string (nama pattern, contoh: 'Before-After Reveal')",
+      "pattern": "string (nama pattern, contoh: Before-After Reveal)",
       "description": "string (penjelasan pattern ini dan kenapa work)",
       "example": "string (contoh konkret bagaimana implementasinya)",
       "virality": "string (tingkat viral: Tinggi/Sedang/Rendah)",
       "frequency": "string (seberapa sering posting pattern ini)"
-    },
-    {
-      "pattern": "string",
-      "description": "string",
-      "example": "string",
-      "virality": "string",
-      "frequency": "string"
-    },
-    {
-      "pattern": "string",
-      "description": "string",
-      "example": "string",
-      "virality": "string",
-      "frequency": "string"
-    },
-    {
-      "pattern": "string",
-      "description": "string",
-      "example": "string",
-      "virality": "string",
-      "frequency": "string"
-    },
-    {
-      "pattern": "string",
-      "description": "string",
-      "example": "string",
-      "virality": "string",
-      "frequency": "string"
     }
   ],
   "strategicInsight": {
@@ -101,7 +73,7 @@ OUTPUT JSON:
     "string (langkah ke-2)",
     "string (langkah ke-3)"
   ],
-  "overallScore": number (0-100, seberapa promising niche ini untuk dimasuki),
+  "overallScore": 75,
   "entryDifficulty": "string (Easy/Medium/Hard — seberapa sulit masuk niche ini)"
 }`;
 
@@ -120,7 +92,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = env.GEMINI_API_KEY;
+    const apiKey = getRandomGeminiKey();
 
     // Parse body
     let body: { niche: string; contentType?: string };
@@ -145,6 +117,7 @@ export async function POST(req: NextRequest) {
 
     // Sanitize
     const safeNiche = niche.replace(/[<>{}\\]+/g, "").trim();
+    const safeContentType = contentType || "Umum";
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -163,7 +136,7 @@ export async function POST(req: NextRequest) {
     const userPrompt = `Analisa niche berikut dan berikan competitor brief yang lengkap:
 
 NICHE: ${safeNiche}
-CONTENT TYPE: ${contentType || "Umum"}
+CONTENT TYPE: ${safeContentType}
 
 TUGAS:
 1. Berikan overview niche (ukuran, kompetisi, cara monetize, opportunity)
@@ -176,6 +149,7 @@ PENTING:
 - content patterns harus spesifik dan bisa langsung di-copy
 - action plan harus very actionable — hal yang bisa dilakukan dalam 1-2 hari
 - Semua dalam Bahasa Indonesia`;
+
     let result;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60_000);
@@ -192,8 +166,11 @@ PENTING:
 
     const rawText = result.response.text().trim();
     let cleanText = rawText;
-    if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
-    else if (cleanText.startsWith("```")) cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
+    if (cleanText.startsWith("```json")) {
+      cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+    } else if (cleanText.startsWith("```")) {
+      cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
+    }
 
     let parsed;
     try {
