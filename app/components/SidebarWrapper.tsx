@@ -49,6 +49,22 @@ function useHistory() {
     []
   );
 
+  const updateHistoryItem = useCallback((id: string, result: GenerateResult) => {
+    setHistory((prev) => {
+      const updated = prev.map((item) =>
+        item.id === id ? { ...item, result } : item
+      );
+      try {
+        localStorage.setItem("flowfor_history", JSON.stringify(updated));
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[useHistory] Gagal update history:", err);
+        }
+      }
+      return updated;
+    });
+  }, []);
+
   const deleteHistoryItem = useCallback((id: string) => {
     setHistory((prev) => {
       const updated = prev.filter((item) => item.id !== id);
@@ -63,7 +79,7 @@ function useHistory() {
     });
   }, []);
 
-  return { history, addHistoryItem, deleteHistoryItem };
+  return { history, addHistoryItem, updateHistoryItem, deleteHistoryItem };
 }
 
 // ==============================================
@@ -72,17 +88,21 @@ function useHistory() {
 export default function SidebarWrapper({ searchQuery = "" }: { searchQuery?: string }) {
   const [activePanel, setActivePanel] = useState<ActivePanel>("dashboard");
   const [selectedCampaign, setSelectedCampaign] = useState<GenerateResult | null>(null);
-  const { history, addHistoryItem, deleteHistoryItem } = useHistory();
+  // Track the history item ID that matches the currently selected campaign
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const { history, addHistoryItem, updateHistoryItem, deleteHistoryItem } = useHistory();
 
   // When user clicks "Muat Ulang" from history → load result + switch to dashboard
   const handleLoadCampaign = useCallback((item: HistoryItem) => {
     setSelectedCampaign(item.result);
+    setSelectedCampaignId(item.id);
     setActivePanel("dashboard");
   }, []);
 
   // When New Campaign is clicked → clear result + switch to dashboard
   const handleNewCampaign = useCallback(() => {
     setSelectedCampaign(null);
+    setSelectedCampaignId(null);
     setActivePanel("dashboard");
   }, []);
 
@@ -106,6 +126,10 @@ export default function SidebarWrapper({ searchQuery = "" }: { searchQuery?: str
   // When GeneratorDashboard completes a generate → save to history
   const handleGenerateSuccess = useCallback(
     (data: GenerateResult, productName: string, targetAudience: string, contentType: string) => {
+      // Remove old entry with same ID if exists (to avoid duplicates)
+      if (selectedCampaignId) {
+        deleteHistoryItem(selectedCampaignId);
+      }
       addHistoryItem({
         productName,
         targetAudience,
@@ -113,7 +137,20 @@ export default function SidebarWrapper({ searchQuery = "" }: { searchQuery?: str
         result: data,
       });
     },
-    [addHistoryItem]
+    [history, selectedCampaignId, addHistoryItem, deleteHistoryItem]
+  );
+
+  // When CampaignAdvisor updates result (e.g. new vibe score) → update local state + history
+  const handleResultUpdate = useCallback(
+    (data: GenerateResult) => {
+      // Update the in-memory selected campaign so UI stays in sync
+      setSelectedCampaign(data);
+      // Persist the updated result to history so it survives navigation
+      if (selectedCampaignId) {
+        updateHistoryItem(selectedCampaignId, data);
+      }
+    },
+    [selectedCampaignId, updateHistoryItem]
   );
 
   const renderPanel = () => {
@@ -142,6 +179,7 @@ export default function SidebarWrapper({ searchQuery = "" }: { searchQuery?: str
           <GeneratorDashboard
             initialResult={selectedCampaign}
             onGenerateSuccess={handleGenerateSuccess}
+            onResultUpdate={handleResultUpdate}
           />
         );
     }

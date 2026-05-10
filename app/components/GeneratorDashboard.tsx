@@ -117,6 +117,8 @@ interface GeneratorDashboardProps {
     targetAudience: string,
     contentType: string
   ) => void;
+  // Fires whenever the local result is updated (e.g. by CampaignAdvisor score changes)
+  onResultUpdate?: (data: GenerateResult) => void;
 }
 
 const LANGUAGES = [
@@ -887,6 +889,7 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
 export default function GeneratorDashboard({
   initialResult,
   onGenerateSuccess,
+  onResultUpdate,
 }: GeneratorDashboardProps = {}) {
   const { settings, updateSettings, isDark } = useSettings();
   
@@ -1083,6 +1086,8 @@ export default function GeneratorDashboard({
 
       // Notify parent to save to history
       onGenerateSuccess?.(data, formData.productName, targetAudienceValue, formData.contentType);
+      // Notify parent of updated result (so history persists score changes)
+      onResultUpdate?.(data);
     } catch (err) {
       const rawMsg = err instanceof Error ? err.message : "";
       // Map common errors to friendly Indonesian messages
