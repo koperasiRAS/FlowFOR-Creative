@@ -342,7 +342,7 @@ function BentoCard({
   sectionKey?: string;
 }) {
   return (
-    <div className={`glass-card p-5 relative group transition-all duration-200 ${className} ${colSpan}`}>
+    <div className={`glass-card p-5 relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${className} ${colSpan}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className={`inline-block ${pillBg} ${pillText} text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide`}>
@@ -407,7 +407,7 @@ function ToDoListCard({
   }, [items]);
 
   return (
-    <div className={`glass-card p-5 relative group transition-all duration-200 ${className}`}>
+    <div className={`glass-card p-5 relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="inline-block bg-orange-100 text-orange-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
@@ -494,7 +494,7 @@ function StoryboardCard({
   };
 
   return (
-    <div className="glass-card p-5 relative group lg:col-span-2 transition-all duration-200">
+    <div className="glass-card p-5 relative group lg:col-span-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="inline-block bg-red-100 text-red-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
@@ -588,7 +588,7 @@ function ShootScriptCard({
   };
 
   return (
-    <div className="glass-card p-5 transition-all duration-200 lg:col-span-2">
+    <div className="glass-card p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl lg:col-span-2">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="inline-block bg-cyan-100 text-cyan-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
@@ -1072,13 +1072,11 @@ export default function GeneratorDashboard({
       )}
 
       <div className="min-h-screen bg-transparent pt-3 md:pt-6 pb-8 px-3 md:px-4 transition-colors duration-300">
-        {/* Split view: left = form+results (60%), right = AI Advisor (420px) */}
-        <div className="max-w-full mx-auto grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-4 md:gap-6 items-start">
+        {/* Main Grid: Form on left, Results on right */}
+        <div className="max-w-full mx-auto grid grid-cols-1 lg:grid-cols-[380px_1fr] xl:grid-cols-[420px_1fr] gap-4 md:gap-6 items-start">
 
-          {/* ===== LEFT COLUMN — INPUT FORM + RESULTS ===== */}
-          <div className="space-y-4">
-            {/* Sticky Form */}
-            <div className="glass-card p-4 md:p-6 lg:sticky lg:top-20 space-y-4 md:space-y-5 animate-slide-up">
+          {/* ===== LEFT COLUMN — INPUT FORM ===== */}
+          <div className="glass-card p-4 md:p-6 lg:sticky lg:top-20 space-y-4 md:space-y-5 animate-slide-up">
 
             {/* Welcome Banner */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-gray-100 dark:border-white/10">
@@ -1352,10 +1350,9 @@ export default function GeneratorDashboard({
               ✨ AI-Powered by Google Gemini
             </p>
           </div>
-          </div>
 
-          {/* ===== MIDDLE COLUMN — RESULTS BENTO GRID ===== */}
-          <div ref={bentoGridRef}>
+          {/* ===== RIGHT COLUMN — RESULTS BENTO GRID & ADVISOR ===== */}
+          <div className="space-y-4 min-w-0" ref={bentoGridRef}>
             <div className="space-y-4">
               {!result && !isLoading ? (
                 <EmptyState />
@@ -1549,17 +1546,17 @@ export default function GeneratorDashboard({
                 </>
               )}
             </div>
-          </div>
 
-          {/* ===== RIGHT COLUMN — AI ADVISOR (~420px, sticky) ===== */}
-          {result && (
-            <div className="lg:sticky lg:top-20 animate-enter-5">
-              <CampaignAdvisor
-                result={result as Parameters<typeof CampaignAdvisor>[0]["result"]}
-                onUpdateResult={setResult as (r: GenerateResult) => void}
-              />
-            </div>
-          )}
+            {/* ===== AI ADVISOR ===== */}
+            {result && (
+              <div className="animate-enter-5 mt-4">
+                <CampaignAdvisor
+                  result={result as Parameters<typeof CampaignAdvisor>[0]["result"]}
+                  onUpdateResult={setResult as (r: GenerateResult) => void}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
