@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     // Initialize Gemini with vision
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: "gemini-3-flash",
+      model: "gemini-2.5-flash",
       systemInstruction: IMAGE_ANALYSIS_SYSTEM_PROMPT,
       safetySettings: [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
