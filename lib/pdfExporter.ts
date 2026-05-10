@@ -432,58 +432,6 @@ export async function generateCampaignPDF(data: PDFData): Promise<Blob> {
     doc.text(audioLines[0], sbColX + 90, rowY + 5);
   });
 
-  // ─── PAGE 5: VIBE SCORE DETAIL ───
-  addPageHeader("Vibe Score Analysis", "🔥");
-
-  py = 22;
-
-  // Score summary
-  doc.setFillColor(249, 240, 255);
-  doc.roundedRect(margin, py, 60, 20, 2, 2, "F");
-  doc.setTextColor(scoreColorHex);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(24);
-  doc.text(String(score), margin + 10, py + 10);
-  doc.setFontSize(10);
-  doc.text("/100", margin + 28, py + 10);
-  doc.setFontSize(8);
-  doc.setTextColor(purple);
-  doc.text(label, margin + 10, py + 15);
-
-  py += 25;
-
-  // Reasons
-  doc.setTextColor(purple);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text("📊 AI Analysis Reasons", margin, py);
-  py += 6;
-
-  reasons.forEach((reason, i) => {
-    doc.setFillColor(254, 243, 246);
-    doc.roundedRect(margin, py, contentW, 9, 1, 1, "F");
-    doc.setTextColor(purple);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.text(`${i + 1}.`, margin + 3, py + 5.5);
-    doc.setTextColor(darkGray);
-    doc.setFont("helvetica", "normal");
-    const rLines = doc.splitTextToSize(reason, contentW - 10);
-    doc.text(rLines[0], margin + 8, py + 5.5);
-    py += 11;
-  });
-
-  // Niche recommendation if present
-  if (data.nicheRecommendation) {
-    py += 3;
-    doc.setFillColor(255, 251, 235);
-    doc.roundedRect(margin, py, contentW, 10, 1, 1, "F");
-    doc.setTextColor("#92400e");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.text(`✨ Niche: ${data.nicheRecommendation}`, margin + 3, py + 6);
-  }
-
   // ─── PAGE 6: CONTENT CALENDAR ───
   if (data.contentCalendar && data.contentCalendar.length > 0) {
     addPageHeader("Content Calendar", "📅");
