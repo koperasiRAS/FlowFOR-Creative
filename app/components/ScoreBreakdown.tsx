@@ -11,6 +11,13 @@ interface ScoreBreakdownProps {
   landingPage?: string;
   broadcast?: string;
   todoList?: string[];
+  // Optional: component scores from AI (server-side calculation)
+  // If not provided, component computes locally
+  hookPower?: number;
+  emotionalTrigger?: number;
+  ctaUrgency?: number;
+  copyClarity?: number;
+  engagement?: number;
 }
 
 interface ComponentScore {
@@ -185,16 +192,23 @@ export default function ScoreBreakdown({
   landingPage = "",
   broadcast = "",
   todoList = [],
+  hookPower: aiHookPower,
+  emotionalTrigger: aiEmotionalTrigger,
+  ctaUrgency: aiCtaUrgency,
+  copyClarity: aiCopyClarity,
+  engagement: aiEngagement,
 }: ScoreBreakdownProps) {
   const { isDark } = useSettings();
   const [expanded, setExpanded] = useState(false);
 
-  // Calculate component scores
-  const hookPower = analyzeHookPower(caption);
-  const emotionalTrigger = analyzeEmotionalTrigger([caption, landingPage, broadcast].join(" "));
-  const ctaUrgency = analyzeCTAUrgency(caption, landingPage, broadcast);
-  const copyClarity = analyzeCopyClarity([caption, landingPage, broadcast].join(" "));
-  const engagement = analyzeEngagementPotential(caption);
+  // Use AI-provided component scores if available (server-calculated, more accurate)
+  // If not provided (old campaign data from localStorage), compute locally.
+  // If component score is provided as 0, still use it (real analysis, not missing).
+  const hookPower = aiHookPower != null ? aiHookPower : analyzeHookPower(caption);
+  const emotionalTrigger = aiEmotionalTrigger != null ? aiEmotionalTrigger : analyzeEmotionalTrigger([caption, landingPage, broadcast].join(" "));
+  const ctaUrgency = aiCtaUrgency != null ? aiCtaUrgency : analyzeCTAUrgency(caption, landingPage, broadcast);
+  const copyClarity = aiCopyClarity != null ? aiCopyClarity : analyzeCopyClarity([caption, landingPage, broadcast].join(" "));
+  const engagement = aiEngagement != null ? aiEngagement : analyzeEngagementPotential(caption);
 
   const components: ComponentScore[] = [
     {

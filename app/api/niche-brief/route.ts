@@ -2,14 +2,11 @@
  * FlowFOR Creative — API Route: /api/niche-brief
  * © 2026 Rangga Danu Arta. All Rights Reserved.
  * Built for #JuaraVibeCoding competition by Google.
- *
- * Generates strategic niche competitor brief: top competitor accounts,
- * content patterns that work, and strategic insights for the niche.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { getRandomGeminiKey } from "@/lib/env";
+import { withKeyRetry } from "@/lib/env";
 
 // ==============================================
 // RATE LIMITER
@@ -43,6 +40,7 @@ ATURAN:
 2. Semua rekomendasi harus SPECIFIK dan ACTIONABLE — bukan generic advice.
 3. Content patterns harus dari analisis pattern yang sering muncul di niche tersebut.
 4. Insights harus dalam Bahasa Indonesia.
+5. overallScore WAJIB dihitung dari: competition level + monetization potential + opportunity. SKOR HARUS VARIED antar niche — niche yang bagus harus 75-95, niche yang saturated harus 30-55. JANGAN selalu 75.
 
 OUTPUT JSON:
 {
@@ -73,7 +71,7 @@ OUTPUT JSON:
     "string (langkah ke-2)",
     "string (langkah ke-3)"
   ],
-  "overallScore": 75,
+  "overallScore": number (0-100, BASED ON: competition level + monetization potential + entry opportunity — MUST BE VARIED),
   "entryDifficulty": "string (Easy/Medium/Hard — seberapa sulit masuk niche ini)"
 }`;
 
@@ -92,48 +90,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = getRandomGeminiKey();
-
-    // Parse body
+    // Parse + validate body
     let body: { niche: string; contentType?: string };
     try {
       body = await req.json();
     } catch {
       return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
     }
-
     const { niche, contentType } = body;
 
     if (!niche || niche.trim().length < 2) {
-      return NextResponse.json(
-        { error: "Niche harus diisi minimal 2 karakter." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Niche harus diisi minimal 2 karakter." }, { status: 400 });
     }
-
     if (niche.length > 200) {
       return NextResponse.json({ error: "Niche terlalu panjang." }, { status: 400 });
     }
 
-    // Sanitize
-    const safeNiche = niche.replace(/[<>{}\\]+/g, "").trim();
+    const safeNiche = niche.replace(/[<>{}\]]+/g, "").trim();
     const safeContentType = contentType || "Umum";
 
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction: NICHE_BRIEF_SYSTEM_PROMPT,
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-      ],
-      generationConfig: { responseMimeType: "application/json" },
-    });
+    // Execute with automatic key retry on 429 quota errors
+    const parsed = await withKeyRetry(async (apiKey) => {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        systemInstruction: NICHE_BRIEF_SYSTEM_PROMPT,
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        ],
+        generationConfig: { responseMimeType: "application/json" },
+      });
 
-    const userPrompt = `Analisa niche berikut dan berikan competitor brief yang lengkap:
+      const userPrompt = `Analisa niche berikut dan berikan competitor brief yang lengkap:
 
 NICHE: ${safeNiche}
 CONTENT TYPE: ${safeContentType}
@@ -146,41 +137,42 @@ TUGAS:
 5. Beri overall score (0-100) dan entry difficulty
 
 PENTING:
+- overallScore WAJIB varied — berdasarkan competition + monetization + opportunity NICHE ini
 - content patterns harus spesifik dan bisa langsung di-copy
 - action plan harus very actionable — hal yang bisa dilakukan dalam 1-2 hari
 - Semua dalam Bahasa Indonesia`;
 
-    let result;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60_000);
-    try {
-      result = await model.generateContent(userPrompt, { signal: controller.signal });
-    } catch (genErr: unknown) {
+      let result;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60_000);
+      try {
+        result = await model.generateContent(userPrompt, { signal: controller.signal });
+      } catch (genErr: unknown) {
+        clearTimeout(timeoutId);
+        if (genErr instanceof Error && genErr.name === "AbortError") {
+          throw Object.assign(new Error("Request timeout. Coba lagi."), { status: 504 });
+        }
+        throw genErr;
+      }
       clearTimeout(timeoutId);
-      if (genErr instanceof Error && genErr.name === "AbortError") {
-        return NextResponse.json({ error: "Request timeout. Coba lagi." }, { status: 504 });
-      }
-      throw genErr;
-    }
-    clearTimeout(timeoutId);
 
-    const rawText = result.response.text().trim();
-    let cleanText = rawText;
-    if (cleanText.startsWith("```json")) {
-      cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
-    } else if (cleanText.startsWith("```")) {
-      cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
-    }
-
-    let parsed;
-    try {
-      parsed = JSON.parse(cleanText);
-    } catch {
-      if (process.env.NODE_ENV === "development") {
-        console.error("[NicheBrief] Parse error:", cleanText.slice(0, 200));
+      const rawText = result.response.text().trim();
+      let cleanText = rawText;
+      if (cleanText.startsWith("```json")) {
+        cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+      } else if (cleanText.startsWith("```")) {
+        cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
       }
-      return NextResponse.json({ error: "Gagal memproses niche brief. Coba lagi." }, { status: 500 });
-    }
+
+      try {
+        return JSON.parse(cleanText);
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[NicheBrief] Parse error:", cleanText.slice(0, 200));
+        }
+        throw Object.assign(new Error("Gagal memproses niche brief. Coba lagi."), { status: 500 });
+      }
+    });
 
     return NextResponse.json(parsed, { status: 200 });
 

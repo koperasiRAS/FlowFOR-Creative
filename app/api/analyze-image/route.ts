@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { getRandomGeminiKey } from "@/lib/env";
+import { withKeyRetry } from "@/lib/env";
 
 // ==============================================
 // RATE LIMITER
@@ -74,16 +74,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = getRandomGeminiKey();
-
-    // Parse body
+    // Parse + validate body before key retry
     let body: { imageData: string; productContext?: string; contentType?: string };
     try {
       body = await req.json();
     } catch {
       return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
     }
-
     const { imageData, productContext, contentType } = body;
 
     if (!imageData || !imageData.startsWith("data:image/")) {
@@ -92,30 +89,28 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Extract base64 + mime type
     const mimeMatch = imageData.match(/^data:(image\/\w+);base64,(.+)$/);
     if (!mimeMatch) {
       return NextResponse.json({ error: "Format gambar tidak didukung." }, { status: 400 });
     }
     const [, mimeType, base64Data] = mimeMatch;
-    const imageBuffer = Buffer.from(base64Data, "base64");
 
-    // Initialize Gemini with vision
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction: IMAGE_ANALYSIS_SYSTEM_PROMPT,
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-      ],
-      generationConfig: { responseMimeType: "application/json" },
-    });
+    // Execute with automatic key retry on 429 quota errors
+    const parsed = await withKeyRetry(async (apiKey) => {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        systemInstruction: IMAGE_ANALYSIS_SYSTEM_PROMPT,
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        ],
+        generationConfig: { responseMimeType: "application/json" },
+      });
 
-    const userPrompt = `Analisa gambar produk berikut dan berikan insights campaign:
+      const userPrompt = `Analisa gambar produk berikut dan berikan insights campaign:
 
 ${productContext ? `KONTEKS PRODUK: ${productContext}\n` : ""}${contentType ? `CONTENT TYPE: ${contentType}\n` : ""}
 TUGAS:
@@ -131,42 +126,37 @@ TUGAS:
 
 Jawab HANYA dengan JSON object yang sudah ditentukan sistemprompt.`;
 
-    let result;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90_000);
-    try {
-      result = await model.generateContent([
-        {
-          inlineData: {
-            mimeType,
-            data: base64Data,
-          },
-        },
-        { text: userPrompt },
-      ], { signal: controller.signal });
-    } catch (genErr: unknown) {
+      let result;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90_000);
+      try {
+        result = await model.generateContent([
+          { inlineData: { mimeType, data: base64Data } },
+          { text: userPrompt },
+        ], { signal: controller.signal });
+      } catch (genErr: unknown) {
+        clearTimeout(timeoutId);
+        if (genErr instanceof Error && genErr.name === "AbortError") {
+          throw Object.assign(new Error("Request timeout. Gambar terlalu besar atau koneksi lambat."), { status: 504 });
+        }
+        throw genErr;
+      }
       clearTimeout(timeoutId);
-      if (genErr instanceof Error && genErr.name === "AbortError") {
-        return NextResponse.json({ error: "Request timeout. Gambar terlalu besar atau koneksi lambat." }, { status: 504 });
-      }
-      throw genErr;
-    }
-    clearTimeout(timeoutId);
 
-    const rawText = result.response.text().trim();
-    let cleanText = rawText;
-    if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
-    else if (cleanText.startsWith("```")) cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
+      const rawText = result.response.text().trim();
+      let cleanText = rawText;
+      if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+      else if (cleanText.startsWith("```")) cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
 
-    let parsed;
-    try {
-      parsed = JSON.parse(cleanText);
-    } catch {
-      if (process.env.NODE_ENV === "development") {
-        console.error("[AnalyzeImage] Parse error:", cleanText.slice(0, 200));
+      try {
+        return JSON.parse(cleanText);
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[AnalyzeImage] Parse error:", cleanText.slice(0, 200));
+        }
+        throw Object.assign(new Error("Gagal menganalisa gambar. Coba gambar lain."), { status: 500 });
       }
-      return NextResponse.json({ error: "Gagal menganalisa gambar. Coba gambar lain." }, { status: 500 });
-    }
+    });
 
     return NextResponse.json(parsed, { status: 200 });
 

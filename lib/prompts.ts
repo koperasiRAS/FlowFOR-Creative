@@ -33,8 +33,15 @@ ATURAN KRITIS:
 1. Respon dengan HANYA JSON object mentah. TANPA markdown fences. TANPA backticks. TANPA penjelasan sebelum atau sesudah JSON.
 2. Bahasa: Indonesia casual untuk caption/broadcast, Indonesia formal untuk sales page.
 3. Semua teks harus original, persuasive, dan sesuai konteks Indonesia.
-4. Vibe Score harus realistis antara 0-100 berdasarkan kualitas konten yang dihasilkan.
-5. Storyboard HARUS 8 shot dengan detail visual dan audio yang spesifik.
+4. Storyboard HARUS 8 shot dengan detail visual dan audio yang spesifik.
+5. VIBE SCORE WAJIB dihitung dengan rumus exact berikut — JANGAN pakai angka yang selalu sama:
+   - hookPower: nilai 0-100 berdasarkan strength hook di caption (angka di baris pertama, ada urgency/perhatian/komunitas? bisa langsung engage dalam 3 detik?)
+   - emotionalTrigger: nilai 0-100 berdasarkan density emotional words (desire, pain point, social proof, money) dan pain points yang relevant
+   - ctaUrgency: nilai 0-100 berdasarkan ada nggak urgency words (SEKARANG, TERBATAS, GRATIS, download, beli) + CTA yang jelas + benefit sebelum CTA
+   - copyClarity: nilai 0-100 berdasarkan avg sentence length (ideal 5-15 kata), emoji usage (ideal 5-15%), line breaks untuk scanability
+   - engagement: nilai 0-100 berdasarkan hashtag count (ideal 3-8), ada pertanyaan/ajak diskusi, emoji density, save/bookmark/share keywords
+   - SCORE FINAL = round(hookPower*0.25 + emotionalTrigger*0.20 + ctaUrgency*0.20 + copyClarity*0.20 + engagement*0.15)
+   - Score WAJIB varied antar campaign — campaign yang bagus bisa 82-92, yang kurang bagus harus 45-65. JANGAN selalu 88. Buat ANGTKA YANG SESUAI DENGAN KUALITAS NYATA.
 
 ATURAN SPESIFIK PER OUTPUT:
 
@@ -96,12 +103,17 @@ OUTPUT JSON WAJIB sesuai struktur ini:
     { "shot": "...", "visual": "...", "audio": "..." }
   ],
   "vibeScore": {
-    "score": number (0-100, integer, berdasarkan hook strength + emotional trigger + CTA urgency),
-    "label": "string (label kreator yang sesuai, misal: 'High Viral Potential', 'Solid Launch Ready', 'Needs More Fire')",
+    "score": number (HASIL AKHIR dari rumus: hookPower*0.25 + emotionalTrigger*0.20 + ctaUrgency*0.20 + copyClarity*0.20 + engagement*0.15 — integer 0-100, WAJIB sesuai dengan kualitas nyata konten),
+    "hookPower": number (0-100, kekuatan hook di awal caption),
+    "emotionalTrigger": number (0-100, penggunaan emotional words dan pain points),
+    "ctaUrgency": number (0-100, tingkat urgency dan kejelasan CTA),
+    "copyClarity": number (0-100, kejelasan dan kemudahan dibaca),
+    "engagement": number (0-100, potensi engagement dan sharing),
+    "label": "string (label kreator yang sesuai: score >= 80 = 'High Viral Potential', score >= 60 = 'Solid Launch Ready', score >= 40 = 'Good Foundation', score < 40 = 'Needs Work')",
     "reasons": [
-      "string (alasan 1, spesifik dan actionable, apa yang sudah bagus dan apa yang perlu diperbaiki)",
-      "string (alasan 2...)",
-      "string (alasan 3...)"
+      "string (alasan 1, SPECIFIK dan actionable — apa yang sudah bagus dari konten ini)",
+      "string (alasan 2, SPECIFIK — apa yang perlu diperbaiki dan bagaimana caranya)",
+      "string (alasan 3, SPECIFIK — insight tambahan untuk boost viral potential)"
     ]
   },
   "contentCalendar": [

@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { getRandomGeminiKey } from "@/lib/env";
+import { withKeyRetry } from "@/lib/env";
 
 // ==============================================
 // RATE LIMITER
@@ -74,8 +74,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = getRandomGeminiKey();
-
+    // Parse + validate body
     let body: {
       question: string;
       campaignData?: {
@@ -85,6 +84,11 @@ export async function POST(req: NextRequest) {
         caption?: string;
         broadcast?: string;
         vibeScore?: number;
+        hookPower?: number;
+        emotionalTrigger?: number;
+        ctaUrgency?: number;
+        copyClarity?: number;
+        engagement?: number;
         todoList?: string[];
         storyboard?: { shot: string; visual: string; audio: string }[];
       };
@@ -96,24 +100,15 @@ export async function POST(req: NextRequest) {
     } catch {
       return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
     }
-
     const { question, campaignData, history } = body;
 
     if (!question || question.trim().length < 3) {
-      return NextResponse.json(
-        { error: "Pertanyaan terlalu pendek." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Pertanyaan terlalu pendek." }, { status: 400 });
     }
-
     if (question.length > 1000) {
-      return NextResponse.json(
-        { error: "Pertanyaan terlalu panjang. Maksimal 1000 karakter." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Pertanyaan terlalu panjang. Maksimal 1000 karakter." }, { status: 400 });
     }
-
-    const safeQuestion = question.replace(/[<>{}\\]+/g, "").trim();
+    const safeQuestion = question.replace(/[<>{}\]]+/g, "").trim();
 
     // Build conversation context from history (last 6 messages)
     const conversationHistory = (history || []).slice(-6).map((h) => {
@@ -124,66 +119,74 @@ export async function POST(req: NextRequest) {
     // Build campaign context
     let campaignContext = "";
     if (campaignData) {
+      const vs = campaignData;
       campaignContext = `
 DATA CAMPAIGN SAAT INI:
-- Produk: ${campaignData.productName || "—"}
-- Content Type: ${campaignData.contentType || "—"}
-- Vibe Score: ${campaignData.vibeScore ?? "—"}
-${campaignData.landingPage ? `- Sales Page:\n${campaignData.landingPage.slice(0, 500)}` : ""}
-${campaignData.caption ? `- Caption:\n${campaignData.caption.slice(0, 500)}` : ""}
-${campaignData.broadcast ? `- Broadcast:\n${campaignData.broadcast.slice(0, 500)}` : ""}
-${campaignData.todoList?.length ? `- To-Do List:\n${campaignData.todoList.map((t, i) => `${i + 1}. ${t}`).join("\n")}` : ""}
-${campaignData.storyboard?.length ? `- Storyboard:\n${campaignData.storyboard.map((s) => `${s.shot}: ${s.visual}`).join("\n")}` : ""}
+- Produk: ${vs.productName || "—"}
+- Content Type: ${vs.contentType || "—"}
+- Vibe Score: ${vs.vibeScore ?? "—"}/100
+${vs.hookPower != null ? `- Hook Power: ${vs.hookPower}/100` : ""}
+${vs.emotionalTrigger != null ? `- Emotional Trigger: ${vs.emotionalTrigger}/100` : ""}
+${vs.ctaUrgency != null ? `- CTA Urgency: ${vs.ctaUrgency}/100` : ""}
+${vs.copyClarity != null ? `- Copy Clarity: ${vs.copyClarity}/100` : ""}
+${vs.engagement != null ? `- Engagement: ${vs.engagement}/100` : ""}
+${vs.landingPage ? `- Sales Page:\n${vs.landingPage.slice(0, 500)}` : ""}
+${vs.caption ? `- Caption:\n${vs.caption.slice(0, 500)}` : ""}
+${vs.broadcast ? `- Broadcast:\n${vs.broadcast.slice(0, 500)}` : ""}
+${vs.todoList?.length ? `- To-Do List:\n${vs.todoList.map((t, i) => `${i + 1}. ${t}`).join("\n")}` : ""}
+${vs.storyboard?.length ? `- Storyboard:\n${vs.storyboard.map((s) => `${s.shot}: ${s.visual}`).join("\n")}` : ""}
 `;
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction: ADVISOR_SYSTEM_PROMPT,
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-      ],
-      generationConfig: { responseMimeType: "application/json" },
-    });
+    // Execute with automatic key retry on 429 quota errors
+    const parsed = await withKeyRetry(async (apiKey) => {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        systemInstruction: ADVISOR_SYSTEM_PROMPT,
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        ],
+        generationConfig: { responseMimeType: "application/json" },
+      });
 
-    const userPrompt = `${conversationHistory ? `RIWAYAT PERCAKAPAN:\n${conversationHistory}\n\n` : ""}${campaignContext}
+      const userPrompt = `${conversationHistory ? `RIWAYAT PERCAKAPAN:\n${conversationHistory}\n\n` : ""}${campaignContext}
 PERTANYAAN USER:
 ${safeQuestion}
 
 JAWAB dengan JSON object sesuai sistemprompt.`;
 
-    let result;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60_000);
-    try {
-      result = await model.generateContent(userPrompt, { signal: controller.signal });
-    } catch (genErr: unknown) {
+      let result;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60_000);
+      try {
+        result = await model.generateContent(userPrompt, { signal: controller.signal });
+      } catch (genErr: unknown) {
+        clearTimeout(timeoutId);
+        if (genErr instanceof Error && genErr.name === "AbortError") {
+          throw Object.assign(new Error("Request timeout. Coba lagi."), { status: 504 });
+        }
+        throw genErr;
+      }
       clearTimeout(timeoutId);
-      if (genErr instanceof Error && genErr.name === "AbortError") {
-        return NextResponse.json({ error: "Request timeout. Coba lagi." }, { status: 504 });
-      }
-      throw genErr;
-    }
-    clearTimeout(timeoutId);
 
-    const rawText = result.response.text().trim();
-    let cleanText = rawText;
-    if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
-    else if (cleanText.startsWith("```")) cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
+      const rawText = result.response.text().trim();
+      let cleanText = rawText;
+      if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+      else if (cleanText.startsWith("```")) cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
 
-    let parsed;
-    try {
-      parsed = JSON.parse(cleanText);
-    } catch {
-      if (process.env.NODE_ENV === "development") {
-        console.error("[CampaignAdvisor] Parse error:", cleanText.slice(0, 200));
+      try {
+        return JSON.parse(cleanText);
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[CampaignAdvisor] Parse error:", cleanText.slice(0, 200));
+        }
+        throw Object.assign(new Error("Gagal memproses jawaban AI. Coba lagi."), { status: 500 });
       }
-      return NextResponse.json({ error: "Gagal memproses jawaban AI. Coba lagi." }, { status: 500 });
-    }
+    });
 
     return NextResponse.json(parsed, { status: 200 });
 

@@ -8,14 +8,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { SYSTEM_PROMPT, IMAGE_ANALYSIS_SYSTEM_PROMPT } from "@/lib/prompts";
-import { getRandomGeminiKey } from "@/lib/env";
+import { withKeyRetry } from "@/lib/env";
 
 // ==============================================
 // RATE LIMITER — In-memory, 10 req/min/IP
 // ==============================================
 const rateLimiter = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 10;
-const RATE_WINDOW = 60_000; // 1 minute
+const RATE_WINDOW = 60_000;
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
@@ -32,7 +32,7 @@ function checkRateLimit(ip: string): boolean {
 // ==============================================
 // INPUT SANITIZER — Strip dangerous characters
 // ==============================================
-const DANGEROUS_CHARS = /[<>{}\\]+/g;
+const DANGEROUS_CHARS = /[<>{}\]]+/g;
 const sanitize = (str: string): string => str.replace(DANGEROUS_CHARS, "").trim();
 
 // ==============================================
@@ -46,6 +46,11 @@ interface StoryboardItem {
 
 interface VibeScore {
   score: number;
+  hookPower: number;
+  emotionalTrigger: number;
+  ctaUrgency: number;
+  copyClarity: number;
+  engagement: number;
   label: string;
   reasons: string[];
 }
@@ -60,7 +65,7 @@ export interface GenerateRequestBody {
   copyLength?: string;
   captionLength?: string;
   platforms?: string[];
-  imageData?: string; // base64 data URL, optional
+  imageData?: string;
 }
 
 export interface GenerateResponse {
@@ -109,7 +114,6 @@ interface ShootScriptData {
   tips: string[];
 }
 
-
 // ==============================================
 // SAFETY SETTINGS
 // ==============================================
@@ -124,146 +128,128 @@ const safetySettings: { category: HarmCategory; threshold: HarmBlockThreshold }[
 // POST /api/generate
 // ==============================================
 export async function POST(req: NextRequest) {
+  // 1. Rate limiting
+  const forwarded = req.headers.get("x-forwarded-for");
+  const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: "Terlalu banyak request. Tunggu sebentar lalu coba lagi." },
+      { status: 429 }
+    );
+  }
+
+  // 2. Parse body (once, before retries)
+  let body: GenerateRequestBody;
   try {
-    // 1. Rate limiting — get client IP
-    const forwarded = req.headers.get("x-forwarded-for");
-    const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json(
-        { error: "Terlalu banyak request. Tunggu sebentar lalu coba lagi." },
-        { status: 429 }
-      );
-    }
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
 
-    // 2. Read API key — picks a random key from the pool for load balancing
-    const apiKey = getRandomGeminiKey();
+  const { productName, targetAudience, description, contentType, imageData } = body;
 
-    // 3. Parse request body
-    let body: GenerateRequestBody;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
-    }
-    const { productName, targetAudience, description, contentType, imageData } = body;
+  // 3. Validate required fields
+  if (!productName || !targetAudience || !description || !contentType) {
+    return NextResponse.json(
+      { error: "Field wajib hilang: productName, targetAudience, description, contentType." },
+      { status: 400 }
+    );
+  }
 
-    // 3a. Input validation — required fields
-    if (!productName || !targetAudience || !description || !contentType) {
-      return NextResponse.json(
-        { error: "Field wajib hilang: productName, targetAudience, description, contentType." },
-        { status: 400 }
-      );
-    }
+  // 4. Validate lengths
+  const MAX = { productName: 200, targetAudience: 200, description: 2000, interestHint: 500 };
+  if (
+    productName.length > MAX.productName ||
+    targetAudience.length > MAX.targetAudience ||
+    description.length > MAX.description ||
+    (body.interestHint && body.interestHint.length > MAX.interestHint) ||
+    (body.imageData && body.imageData.length > 8 * 1024 * 1024)
+  ) {
+    return NextResponse.json({ error: "Input terlalu panjang. Mohon periksa kembali." }, { status: 400 });
+  }
 
-    // 3b. Input length validation (anti DoS)
-    const MAX = { productName: 200, targetAudience: 200, description: 2000, interestHint: 500 };
-    if (
-      productName.length > MAX.productName ||
-      targetAudience.length > MAX.targetAudience ||
-      description.length > MAX.description ||
-      (body.interestHint && body.interestHint.length > MAX.interestHint) ||
-      (body.imageData && body.imageData.length > 8 * 1024 * 1024) // max 8MB base64
-    ) {
-      return NextResponse.json(
-        { error: "Input terlalu panjang. Mohon periksa kembali." },
-        { status: 400 }
-      );
-    }
+  const VALID_CONTENT_TYPES = [
+    "Produk Digital", "Jasa/Service", "Event/Webinar",
+    "Affiliate/Review", "Konten Edukasi", "Konten Monetisasi",
+    "Podcast/Audio", "Niche Finder",
+  ];
+  if (!VALID_CONTENT_TYPES.includes(contentType)) {
+    return NextResponse.json({ error: "contentType tidak valid." }, { status: 400 });
+  }
 
-    // 3c. Validate contentType against allowed values
-    const VALID_CONTENT_TYPES = [
-      "Produk Digital", "Jasa/Service", "Event/Webinar",
-      "Affiliate/Review", "Konten Edukasi", "Konten Monetisasi",
-      "Podcast/Audio", "Niche Finder",
-    ];
-    if (!VALID_CONTENT_TYPES.includes(contentType)) {
-      return NextResponse.json({ error: "contentType tidak valid." }, { status: 400 });
-    }
+  // 5. Sanitize inputs
+  const safeProductName = sanitize(productName);
+  const safeDescription = sanitize(description);
+  const safeAudience = sanitize(targetAudience);
+  const safeInterestHint = body.interestHint ? sanitize(body.interestHint) : undefined;
 
-    // 3d. Sanitize all string inputs (anti injection)
-    const safeProductName = sanitize(productName);
-    const safeDescription = sanitize(description);
-    const safeAudience = sanitize(targetAudience);
-    const safeInterestHint = body.interestHint ? sanitize(body.interestHint) : undefined;
+  // 6. Execute with automatic key retry on 429 quota errors
+  let result: GenerateResponse;
+  try {
+    result = await withKeyRetry(async (apiKey) => {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const today = new Date();
+      const currentMonth = today.toLocaleString('id-ID', { month: 'long' });
+      const currentDay = today.getDate();
+      const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      const remainingDays = daysInMonth - currentDay + 1;
+      const selectedPlatforms =
+        body.platforms && body.platforms.length > 0
+          ? body.platforms.join(", ")
+          : "Instagram, TikTok, WhatsApp, YouTube";
 
-    // 3. Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    // 4. Build user prompt with sanitized, real-time context
-    const today = new Date();
-    const currentMonth = today.toLocaleString('id-ID', { month: 'long' });
-    const currentDay = today.getDate();
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    const remainingDays = daysInMonth - currentDay + 1;
-    const selectedPlatforms = (body.platforms && body.platforms.length > 0) ? body.platforms.join(", ") : "Instagram, TikTok, WhatsApp, YouTube";
-
-    // ---- Image Analysis (if imageData provided) ----
-    let imageAnalysis: GenerateResponse["imageAnalysis"] = undefined;
-
-    if (imageData && imageData.startsWith("data:image/")) {
-      const mimeMatch = imageData.match(/^data:(image\/\w+);base64,(.+)$/);
-      if (mimeMatch) {
-        const [, mimeType, base64Data] = mimeMatch;
-
-        const visionModel = genAI.getGenerativeModel({
-          model: "gemini-2.5-flash",
-          systemInstruction: IMAGE_ANALYSIS_SYSTEM_PROMPT,
-          safetySettings,
-          generationConfig: { responseMimeType: "application/json" },
-        });
-
-        const analysisPrompt = `Analisa gambar produk berikut untuk campaign launch:
-
-PRODUCT CONTEXT: ${safeProductName}
-DESCRIPTION: ${safeDescription}
-CONTENT TYPE: ${contentType}
-
-Jawab HANYA dengan JSON object sesuai format sistemprompt.`;
-
-        let analysisResult;
-        const ac = new AbortController();
-        const analysisTimeout = setTimeout(() => ac.abort(), 60_000);
-        try {
-          analysisResult = await visionModel.generateContent([
-            { inlineData: { mimeType, data: base64Data } },
-            { text: analysisPrompt },
-          ], { signal: ac.signal });
-        } catch (analysisErr: unknown) {
-          clearTimeout(analysisTimeout);
-          if (analysisErr instanceof Error && analysisErr.name !== "AbortError") {
-            if (process.env.NODE_ENV === "development") console.error("[API] Image analysis failed:", analysisErr);
-          }
-        }
-        clearTimeout(analysisTimeout);
-
-        if (analysisResult) {
-          const rawAnalysis = analysisResult.response.text().trim().replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+      // ---- Image Analysis (if imageData provided) ----
+      let imageAnalysis: GenerateResponse["imageAnalysis"] = undefined;
+      if (imageData && imageData.startsWith("data:image/")) {
+        const mimeMatch = imageData.match(/^data:(image\/\w+);base64,(.+)$/);
+        if (mimeMatch) {
+          const [, mimeType, base64Data] = mimeMatch;
+          const visionModel = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+            systemInstruction: IMAGE_ANALYSIS_SYSTEM_PROMPT,
+            safetySettings,
+            generationConfig: { responseMimeType: "application/json" },
+          });
+          let analysisResult;
+          const ac = new AbortController();
+          const analysisTimeout = setTimeout(() => ac.abort(), 60_000);
           try {
-            const parsedAnalysis = JSON.parse(rawAnalysis);
-            imageAnalysis = {
-              visualTheme: parsedAnalysis.visualTheme ?? "",
-              contentCategory: parsedAnalysis.contentCategory ?? "",
-              suggestedNiche: parsedAnalysis.suggestedNiche ?? "",
-              platformRecommendation: parsedAnalysis.platformRecommendation ?? "",
-              colorPalette: parsedAnalysis.colorPalette ?? [],
-              visualStrength: parsedAnalysis.visualStrength ?? "",
-              visualImprovement: parsedAnalysis.visualImprovement ?? "",
-              campaignAngle: parsedAnalysis.campaignAngle ?? "",
-              visualSuggestion: parsedAnalysis.captionSuggestion ?? parsedAnalysis.visualSuggestion ?? "",
-            };
-          } catch {
-            if (process.env.NODE_ENV === "development") console.error("[API] Image analysis parse failed:", rawAnalysis.slice(0, 200));
+            analysisResult = await visionModel.generateContent([
+              { inlineData: { mimeType, data: base64Data } },
+              { text: `Analisa gambar produk berikut:\nPRODUCT: ${safeProductName}\nDESC: ${safeDescription}\nTYPE: ${contentType}\n\nRespond ONLY dengan raw JSON object.` },
+            ], { signal: ac.signal });
+          } catch (analysisErr: unknown) {
+            if (analysisErr instanceof Error && analysisErr.name !== "AbortError") {
+              if (process.env.NODE_ENV === "development") console.error("[API] Image analysis failed:", analysisErr);
+            }
+          }
+          clearTimeout(analysisTimeout);
+          if (analysisResult) {
+            const rawAnalysis = analysisResult.response.text().trim().replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+            try {
+              const parsedAnalysis = JSON.parse(rawAnalysis);
+              imageAnalysis = {
+                visualTheme: parsedAnalysis.visualTheme ?? "",
+                contentCategory: parsedAnalysis.contentCategory ?? "",
+                suggestedNiche: parsedAnalysis.suggestedNiche ?? "",
+                platformRecommendation: parsedAnalysis.platformRecommendation ?? "",
+                colorPalette: parsedAnalysis.colorPalette ?? [],
+                visualStrength: parsedAnalysis.visualStrength ?? "",
+                visualImprovement: parsedAnalysis.visualImprovement ?? "",
+                campaignAngle: parsedAnalysis.campaignAngle ?? "",
+                visualSuggestion: parsedAnalysis.captionSuggestion ?? parsedAnalysis.visualSuggestion ?? "",
+              };
+            } catch {
+              if (process.env.NODE_ENV === "development") console.error("[API] Image analysis parse failed:", rawAnalysis.slice(0, 200));
+            }
           }
         }
       }
-    }
 
-    // ---- Main Gemini call ----
-    const copyLen = body.copyLength || "short";
-    const captionLen = body.captionLength || "medium";
-
-    // Build dynamic system instruction that includes user's length preferences
-    const dynamicSystemPrompt = `${SYSTEM_PROMPT}
+      // ---- Main Gemini call ----
+      const copyLen = body.copyLength || "short";
+      const captionLen = body.captionLength || "medium";
+      const dynamicSystemPrompt = `${SYSTEM_PROMPT}
 
 PANJANG SALES PAGE SAAT INI: ${copyLen}
 - short: 150-200 kata
@@ -277,18 +263,16 @@ PANJANG CAPTION SAAT INI: ${captionLen}
 
 WAJIB PATUHI PANJANG DI ATAS. JANGAN LEBIH, JANGAN KURANG.`;
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction: dynamicSystemPrompt,
-      safetySettings,
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
-    });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        systemInstruction: dynamicSystemPrompt,
+        safetySettings,
+        generationConfig: { responseMimeType: "application/json" },
+      });
 
-    let extraContext = "";
-    if (imageAnalysis) {
-      extraContext = `
+      let extraContext = "";
+      if (imageAnalysis) {
+        extraContext = `
 VISUAL ANALYSIS (dari gambar yang diupload user):
 - Tema Visual: ${imageAnalysis.visualTheme}
 - Kategori Konten: ${imageAnalysis.contentCategory}
@@ -301,9 +285,9 @@ ${imageAnalysis.suggestedNiche ? `- Niche yang Cocok: ${imageAnalysis.suggestedN
 ${imageAnalysis.platformRecommendation ? `- Platform Rekomendasi: ${imageAnalysis.platformRecommendation}` : ""}
 
 GUNAKAN insights visual ini untuk MENINGKATKAN kualitas landingPage, caption, broadcast, dan storyboard.`;
-    }
+      }
 
-    const userPrompt = `Buatkan launch kit untuk produk berikut:
+      const userPrompt = `Buatkan launch kit untuk produk berikut:
 
 PRODUCT NAME: ${safeProductName}
 TARGET AUDIENCE: ${safeAudience}
@@ -311,7 +295,7 @@ DESCRIPTION: ${safeDescription}
 CONTENT TYPE: ${contentType}
 BAHASA: ${body.language || 'id'}
 PANJANG SALES PAGE: ${body.copyLength || 'short'}
-PANJANG CAPTION SOSMED: ${body.captionLength || 'medium'} (short=1-2 baris, medium=3-5 baris, long=full caption)
+PANJANG CAPTION SOSMED: ${body.captionLength || 'medium'}
 PLATFORM TERPILIH: ${selectedPlatforms}
 TANGGAL HARI INI: ${currentDay} ${currentMonth}
 SISA HARI DI BULAN INI: ${remainingDays} hari
@@ -322,93 +306,91 @@ PENTING:
 - Gunakan HANYA platform: ${selectedPlatforms}.
 - Respond ONLY dengan raw JSON object.`;
 
-    // 5. Call Gemini with timeout
-    let result;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90_000); // 90s timeout
-    try {
-      result = await model.generateContent(userPrompt, { signal: controller.signal });
-    } catch (genErr: unknown) {
+      let genResult;
+      const ac = new AbortController();
+      const timeoutId = setTimeout(() => ac.abort(), 90_000);
+      try {
+        genResult = await model.generateContent(userPrompt, { signal: ac.signal });
+      } catch (genErr: unknown) {
+        clearTimeout(timeoutId);
+        if (genErr instanceof Error && genErr.name === "AbortError") {
+          throw Object.assign(new Error("Request timeout. Gemini AI butuh waktu terlalu lama. Coba lagi dengan deskripsi yang lebih singkat."), { status: 504 });
+        }
+        throw genErr;
+      }
       clearTimeout(timeoutId);
-      if (genErr instanceof Error && genErr.name === "AbortError") {
-        return NextResponse.json(
-          { error: "Request timeout. Gemini AI butuh waktu terlalu lama. Coba lagi dengan deskripsi yang lebih singkat." },
-          { status: 504 }
-        );
+
+      const rawText = genResult.response.text();
+      if (!rawText || rawText.trim() === "") {
+        throw Object.assign(new Error("Gemini returned an empty response."), { status: 500 });
       }
-      throw genErr;
-    }
-    clearTimeout(timeoutId);
-    const response = result.response;
-    const rawText = response.text();
 
-    if (!rawText || rawText.trim() === "") {
-      return NextResponse.json(
-        { error: "Gemini returned an empty response. Please try again." },
-        { status: 500 }
-      );
-    }
-
-    // 6. Strip accidental markdown fences
-    let cleanText = rawText.trim();
-    if (cleanText.startsWith("```json")) {
-      cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
-    } else if (cleanText.startsWith("```")) {
-      cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
-    }
-
-    // 7. Parse JSON safely
-    let parsed: GenerateResponse;
-    try {
-      parsed = JSON.parse(cleanText);
-    } catch (parseErr) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("[API] JSON parse error:", parseErr);
-        console.error("[API] Raw Gemini response:", rawText);
+      let cleanText = rawText.trim();
+      if (cleanText.startsWith("```json")) {
+        cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+      } else if (cleanText.startsWith("```")) {
+        cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
       }
-      return NextResponse.json(
-        {
-          error: "Failed to parse Gemini response. Please try again with different input.",
-        },
-        { status: 500 }
-      );
-    }
 
-    // 8. Validate required fields
-    if (!parsed.landingPage || !parsed.caption || !parsed.broadcast || !parsed.todoList || !parsed.storyboard || !parsed.vibeScore || !parsed.contentCalendar || !parsed.shootScript) {
-      return NextResponse.json(
-        { error: "Gemini response is missing required fields." },
-        { status: 500 }
-      );
-    }
+      let parsed: GenerateResponse;
+      try {
+        parsed = JSON.parse(cleanText);
+      } catch (parseErr) {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[API] JSON parse error:", parseErr);
+          console.error("[API] Raw Gemini response:", rawText);
+        }
+        throw Object.assign(new Error("Failed to parse Gemini response. Please try again with different input."), { status: 500 });
+      }
 
-    // 9. Attach image analysis if present
-    if (imageAnalysis) {
-      parsed.imageAnalysis = imageAnalysis;
-    }
+      if (!parsed.landingPage || !parsed.caption || !parsed.broadcast || !parsed.todoList || !parsed.storyboard || !parsed.vibeScore || !parsed.contentCalendar || !parsed.shootScript) {
+        throw Object.assign(new Error("Gemini response is missing required fields."), { status: 500 });
+      }
 
-    // 10. Return success
-    return NextResponse.json(parsed, { status: 200 });
+      // Validate and recalculate vibeScore server-side (safeguard)
+      const vs = parsed.vibeScore;
+      const hp = Math.max(0, Math.min(100, Math.round(Number(vs.hookPower) || 0)));
+      const et = Math.max(0, Math.min(100, Math.round(Number(vs.emotionalTrigger) || 0)));
+      const cu = Math.max(0, Math.min(100, Math.round(Number(vs.ctaUrgency) || 0)));
+      const cc = Math.max(0, Math.min(100, Math.round(Number(vs.copyClarity) || 0)));
+      const eng = Math.max(0, Math.min(100, Math.round(Number(vs.engagement) || 0)));
+      const recalcScore = Math.round(hp * 0.25 + et * 0.20 + cu * 0.20 + cc * 0.20 + eng * 0.15);
+      const recalcLabel =
+        recalcScore >= 80 ? "High Viral Potential"
+        : recalcScore >= 60 ? "Solid Launch Ready"
+        : recalcScore >= 40 ? "Good Foundation"
+        : "Needs Work";
 
+      parsed.vibeScore = {
+        score: recalcScore,
+        hookPower: hp,
+        emotionalTrigger: et,
+        ctaUrgency: cu,
+        copyClarity: cc,
+        engagement: eng,
+        label: vs.label || recalcLabel,
+        reasons: Array.isArray(vs.reasons) ? vs.reasons : [],
+      };
+
+      if (imageAnalysis) {
+        parsed.imageAnalysis = imageAnalysis;
+      }
+
+      return parsed;
+    }); // end withKeyRetry
   } catch (err) {
     if (process.env.NODE_ENV === "development") {
       console.error("[API] Unexpected error:", err);
     }
-
-    // Classify error and assign user-safe codes
     const rawMessage = err instanceof Error ? err.message : "Unknown error occurred";
     let userMessage = "Terjadi kesalahan server. Silakan coba lagi.";
     let errorCode = "INTERNAL_ERROR";
 
-    if (
-      rawMessage.includes("503") ||
-      rawMessage.includes("Service Unavailable") ||
-      rawMessage.includes("high demand")
-    ) {
+    if (rawMessage.includes("503") || rawMessage.includes("Service Unavailable") || rawMessage.includes("high demand")) {
       userMessage = "Server AI sedang penuh (High Demand). Harap tunggu beberapa detik dan coba lagi ya! 🚀";
       errorCode = "AI_SERVER_FULL";
     } else if (rawMessage.includes("429") || rawMessage.toLowerCase().includes("quota")) {
-      userMessage = "Batas penggunaan AI tercapai. Tunggu sebentar lalu coba lagi.";
+      userMessage = "Semua API key sedang habis quota. Tunggu 1 menit lalu coba lagi.";
       errorCode = "QUOTA_EXCEEDED";
     } else if (rawMessage.includes("403") || rawMessage.includes("permission") || rawMessage.includes("API key")) {
       userMessage = "Konfigurasi AI tidak valid. Hubungi administrator.";
@@ -421,9 +403,9 @@ PENTING:
       errorCode = "TIMEOUT";
     }
 
-    return NextResponse.json(
-      { error: userMessage, code: errorCode },
-      { status: 500 }
-    );
+    const status = (err as { status?: number }).status || 500;
+    return NextResponse.json({ error: userMessage, code: errorCode }, { status });
   }
+
+  return NextResponse.json(result, { status: 200 });
 }

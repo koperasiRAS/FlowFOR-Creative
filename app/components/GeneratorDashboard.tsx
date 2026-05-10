@@ -37,6 +37,11 @@ interface StoryboardItem {
 
 interface VibeScoreData {
   score: number;
+  hookPower: number;
+  emotionalTrigger: number;
+  ctaUrgency: number;
+  copyClarity: number;
+  engagement: number;
   label: string;
   reasons: string[];
 }
@@ -1574,7 +1579,7 @@ export default function GeneratorDashboard({
                   {/* Row 7: Vibe Score */}
                   <div className="animate-enter-5">
                     <VibeScoreCard
-                      score={result?.vibeScore ?? { score: 0, label: "", reasons: [] }}
+                      score={result?.vibeScore ?? { score: 0, hookPower: 0, emotionalTrigger: 0, ctaUrgency: 0, copyClarity: 0, engagement: 0, label: "", reasons: [] }}
                       isLoading={isLoading}
                       copied={copiedCard === "vibeScore"}
                       onCopy={() => handleCopy("vibeScore", vibeScoreText)}
@@ -1591,6 +1596,11 @@ export default function GeneratorDashboard({
                         landingPage={result.landingPage}
                         broadcast={result.broadcast}
                         todoList={result.todoList}
+                        hookPower={result.vibeScore?.hookPower}
+                        emotionalTrigger={result.vibeScore?.emotionalTrigger}
+                        ctaUrgency={result.vibeScore?.ctaUrgency}
+                        copyClarity={result.vibeScore?.copyClarity}
+                        engagement={result.vibeScore?.engagement}
                       />
                     </div>
                   )}
