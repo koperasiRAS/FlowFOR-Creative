@@ -1423,7 +1423,7 @@ export default function GeneratorDashboard({
             </form>
 
             <p className="text-center text-[11px] text-gray-400">
-              AI-powered by Google Gemini 2.5 Flash
+              ✨ AI-Powered by Google Gemini
             </p>
           </div>
 
