@@ -245,9 +245,9 @@ PANJANG SALES PAGE SAAT INI: ${copyLen}
 - long: 400-500 kata
 
 PANJANG CAPTION SAAT INI: ${captionLen}
-- short: 1-2 baris SAJA
-- medium: 3-5 baris
-- long: full caption lengkap
+- short: 1-2 baris SAJA (gabungkan dengan beberapa hashtag relevan di akhir)
+- medium: 3-5 baris (gabungkan dengan hashtag relevan di akhir)
+- long: full caption lengkap (gabungkan dengan hashtag relevan di akhir)
 
 WAJIB PATUHI PANJANG DI ATAS. JANGAN LEBIH, JANGAN KURANG.`;
 
@@ -292,6 +292,8 @@ ${safeInterestHint ? `\nUSER INTEREST/HINT: ${safeInterestHint}` : ""}${extraCon
 PENTING:
 - Content Calendar HARUS mulai dari tanggal ${currentDay} ${currentMonth} sampai akhir bulan.
 - Gunakan HANYA platform: ${selectedPlatforms}.
+- KONSISTENSI VISUAL & SCRIPT: "storyboard" dan "shootScript" HARUS saling berkaitan dan selaras. Storyboard fokus pada gambaran visual dan audio/SFX. ShootScript menjabarkan dialog dan aksi dari adegan yang SAMA.
+- DURASI VIDEO: Maksimal 1 Menit sampai 1 Menit 15 Detik. Pastikan durasi pada "shootScript" konsisten.
 - Respond ONLY dengan raw JSON object.`;
 
       let genResult;

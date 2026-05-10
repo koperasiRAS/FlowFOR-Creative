@@ -264,7 +264,7 @@ export default function ContentCalendar({
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <p className="text-[11px] text-gray-400 mb-1">
-                    {selectedEntry.date}
+                    {new Date(year, new Date().getMonth(), selectedEntry.day).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
