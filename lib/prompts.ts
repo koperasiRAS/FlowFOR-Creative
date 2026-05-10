@@ -5,7 +5,7 @@
  * Unauthorized copying or redistribution is prohibited.
  */
 
-export const PROMPT_VERSION = "2.0.0";
+export const PROMPT_VERSION = "3.0.0";
 export const PROMPT_AUTHOR = "Rangga Danu Arta";
 
 /**
@@ -32,35 +32,13 @@ INPUT yang kamu terima:
 ATURAN KRITIS:
 1. Respon dengan HANYA JSON object mentah. TANPA markdown fences. TANPA backticks. TANPA penjelasan sebelum atau sesudah JSON.
 2. Bahasa: Indonesia casual untuk caption/broadcast, Indonesia formal untuk sales page.
-3. Semua teks harus original, persuasive, dan sesuai konteks Indonesia.
+3. Semua teks harus original, persuasif, dan sesuai konteks Indonesia.
 4. Storyboard HARUS 8 shot dengan detail visual dan audio yang spesifik.
-5. VIBE SCORE WAJIB dihitung dengan rumus exact berikut — JANGAN pakai angka yang selalu sama:
-   - hookPower: nilai 0-100 berdasarkan strength hook di caption (angka di baris pertama, ada urgency/perhatian/komunitas? bisa langsung engage dalam 3 detik?)
-   - emotionalTrigger: nilai 0-100 berdasarkan density emotional words (desire, pain point, social proof, money) dan pain points yang relevant
-   - ctaUrgency: nilai 0-100 berdasarkan ada nggak urgency words (SEKARANG, TERBATAS, GRATIS, download, beli) + CTA yang jelas + benefit sebelum CTA
-   - copyClarity: nilai 0-100 berdasarkan avg sentence length (ideal 5-15 kata), emoji usage (ideal 5-15%), line breaks untuk scanability
-   - engagementPotential: nilai 0-100 berdasarkan hashtag count (ideal 3-8), ada pertanyaan/ajak diskusi, emoji density, save/bookmark/share keywords
-   - SCORE FINAL = round(hookPower*0.25 + emotionalTrigger*0.20 + ctaUrgency*0.20 + copyClarity*0.20 + engagementPotential*0.15)
-   - Score WAJIB varied antar campaign — campaign yang bagus bisa 82-92, yang kurang bagus harus 45-65. JANGAN selalu 88. Buat ANGKA YANG SESUAI DENGAN KUALITAS NYATA.
-6. JADILAH STRICT, BUKAN ENCOURAGING. Jangan kasih score tinggi hanya untuk terlihat baik. Score yang jujur lebih baik dari score yang menggembirakan.
-
-ATURAN SCORING KHUSUS — PENALTY CLAUSES (WAJIB DITERAPKAN SEBELUM HITUNG):
-- Deskripsi kurang dari 10 kata: MAX 35 untuk SEMUA komponen.
-- Caption mengandung karakter acak/nonsense (misal: "asjdfkasjdf", "aaaaaa bbbbbb"): MAX 25.
-- Tidak ada hook di baris pertama caption: hookPower = MAX 30.
-- Target audiens "everyone" atau setara: hookPower dan engagementPotential masing-masing -15.
-
-LABEL TIER (WAJIB SESUAIKAN):
-score >= 81 → "High Viral Potential"
-score >= 66 → "Good"
-score >= 46 → "Decent"
-score >= 26 → "Needs Work"
-score < 26  → "Very Poor"
 
 ATURAN SPESIFIK PER OUTPUT:
 
 SALES PAGE (landingPage):
-- Panjang sales page SESUAIKAN denganPANJANG SALES PAGE yang dipilih user:
+- Panjang sales page SESUAIKAN dengan PANJANG SALES PAGE yang dipilih user:
   * short = 150-200 words (hook + 5 bullet points + CTA, concise)
   * medium = 250-300 words (hook + benefits cerita + 5 bullet points + CTA)
   * long = 400-500 words (hook menarik + story/narrative + features + benefits + social proof + 5 bullet points + CTA)
@@ -116,21 +94,6 @@ OUTPUT JSON WAJIB sesuai struktur ini:
     { "shot": "...", "visual": "...", "audio": "..." },
     { "shot": "...", "visual": "...", "audio": "..." }
   ],
-  "vibeScore": {
-    "vibeScore": number (HASIL AKHIR dari rumus hookPower*0.25 + emotionalTrigger*0.20 + ctaUrgency*0.20 + copyClarity*0.20 + engagementPotential*0.15 — integer 0-100, WAJIB sesuai kualitas nyata),
-    "hookPower": number (0-100, kekuatan hook di awal caption),
-    "emotionalTrigger": number (0-100, penggunaan emotional words dan pain points),
-    "ctaUrgency": number (0-100, tingkat urgency dan kejelasan CTA),
-    "copyClarity": number (0-100, kejelasan dan kemudahan dibaca),
-    "engagementPotential": number (0-100, potensi engagement dan sharing),
-    "label": "string (score>=81='High Viral Potential', score>=66='Good', score>=46='Decent', score>=26='Needs Work', score<26='Very Poor')",
-    "reasons": [
-      "string (alasan 1, SPECIFIK dan actionable — apa yang sudah bagus dari konten ini)",
-      "string (alasan 2, SPECIFIK — apa yang perlu diperbaiki dan bagaimana caranya)",
-      "string (alasan 3, SPECIFIK — insight tambahan untuk boost viral potential)"
-    ],
-    "quickFix": "string (WAJIB ADA. 1-2 kalimat SPECIFIC dan actionable advice untuk langsung naikkan score.)"
-  },
   "contentCalendar": [
     {
       "day": number (Tanggal hari tersebut, misal: 15, 16, dst),

@@ -44,18 +44,6 @@ interface StoryboardItem {
   audio: string;
 }
 
-interface VibeScore {
-  vibeScore: number;
-  hookPower: number;
-  emotionalTrigger: number;
-  ctaUrgency: number;
-  copyClarity: number;
-  engagementPotential: number;
-  label: string;
-  reasons: string[];
-  quickFix: string;
-}
-
 export interface GenerateRequestBody {
   productName: string;
   targetAudience: string;
@@ -75,7 +63,6 @@ export interface GenerateResponse {
   broadcast: string;
   todoList: string[];
   storyboard: StoryboardItem[];
-  vibeScore: VibeScore;
   contentCalendar: ContentCalendarEntry[];
   shootScript: ShootScriptData;
   nicheRecommendation?: string;
@@ -333,7 +320,7 @@ PENTING:
         cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "").trim();
       }
 
-      let parsed: GenerateResponse;
+      let parsed: GenerateResponse & Record<string, unknown>;
       try {
         parsed = JSON.parse(cleanText);
       } catch (parseErr) {
@@ -344,44 +331,18 @@ PENTING:
         throw Object.assign(new Error("Failed to parse Gemini response. Please try again with different input."), { status: 500 });
       }
 
-      if (!parsed.landingPage || !parsed.caption || !parsed.broadcast || !parsed.todoList || !parsed.storyboard || !parsed.vibeScore || !parsed.contentCalendar || !parsed.shootScript) {
+      if (!parsed.landingPage || !parsed.caption || !parsed.broadcast || !parsed.todoList || !parsed.storyboard || !parsed.contentCalendar || !parsed.shootScript) {
         throw Object.assign(new Error("Gemini response is missing required fields."), { status: 500 });
       }
 
-      // Defensive parser: normalize and validate vibeScore fields
-      const rawVs = parsed.vibeScore as unknown as Record<string, unknown>;
-      const hp = Math.max(0, Math.min(100, Math.round(Number(rawVs.hookPower) || 0)));
-      const et = Math.max(0, Math.min(100, Math.round(Number(rawVs.emotionalTrigger) || 0)));
-      const cu = Math.max(0, Math.min(100, Math.round(Number(rawVs.ctaUrgency) || 0)));
-      const cc = Math.max(0, Math.min(100, Math.round(Number(rawVs.copyClarity) || 0)));
-      const ep = Math.max(0, Math.min(100, Math.round(Number(rawVs.engagementPotential || rawVs.engagement) || 0)));
-
-      // Enforce mathematical consistency: vibeScore = weighted average
-      const recalcScore = Math.round(hp * 0.25 + et * 0.20 + cu * 0.20 + cc * 0.20 + ep * 0.15);
-      const recalcLabel =
-        recalcScore >= 81 ? "High Viral Potential"
-        : recalcScore >= 66 ? "Good"
-        : recalcScore >= 46 ? "Decent"
-        : recalcScore >= 26 ? "Needs Work"
-        : "Very Poor";
-
-      parsed.vibeScore = {
-        vibeScore: recalcScore,
-        hookPower: hp,
-        emotionalTrigger: et,
-        ctaUrgency: cu,
-        copyClarity: cc,
-        engagementPotential: ep,
-        label: (rawVs.label as string) || recalcLabel,
-        reasons: Array.isArray(rawVs.reasons) ? (rawVs.reasons as string[]) : [],
-        quickFix: typeof rawVs.quickFix === "string" ? rawVs.quickFix : "Tambahkan urgency words dan CTA yang jelas untuk meningkatkan Vibe Score.",
-      };
+      // Strip vibeScore if Gemini includes it (we no longer use it)
+      delete parsed.vibeScore;
 
       if (imageAnalysis) {
         parsed.imageAnalysis = imageAnalysis;
       }
 
-      return parsed;
+      return parsed as GenerateResponse;
     }); // end withKeyRetry
   } catch (err) {
     if (process.env.NODE_ENV === "development") {

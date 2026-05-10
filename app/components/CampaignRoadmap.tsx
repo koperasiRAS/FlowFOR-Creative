@@ -7,7 +7,6 @@ import { useSettings } from "./SettingsContext";
 interface CampaignRoadmapProps {
   calendarData?: ContentCalendarEntry[];
   productName?: string;
-  vibeScore?: number;
 }
 
 interface TimelinePhase {
@@ -102,7 +101,6 @@ const PLATFORM_COLOR: Record<string, string> = {
 export default function CampaignRoadmap({
   calendarData = [],
   productName = "Campaign",
-  vibeScore,
 }: CampaignRoadmapProps) {
   const { isDark } = useSettings();
   const [mounted, setMounted] = useState(false);
@@ -134,13 +132,6 @@ export default function CampaignRoadmap({
   }
 
   const totalEntries = calendarData.length;
-  const scoreLabel = vibeScore
-    ? vibeScore >= 70
-      ? "🔥 High Potential"
-      : vibeScore >= 50
-        ? "⚡ Medium Potential"
-        : "💡 Needs Work"
-    : "";
 
   return (
     <div className="glass-card p-5 lg:col-span-2 transition-all duration-200">
@@ -157,15 +148,6 @@ export default function CampaignRoadmap({
             {totalEntries} posts · 30-day plan
           </span>
         </div>
-        {vibeScore && (
-          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-            vibeScore >= 70 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-              : vibeScore >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-          }`}>
-            {scoreLabel}
-          </span>
-        )}
       </div>
 
       {/* Horizontal Timeline */}

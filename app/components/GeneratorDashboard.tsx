@@ -17,12 +17,9 @@ import {
 import Image from "next/image";
 
 import ContentCalendar from "./ContentCalendar";
-import CampaignRoadmap from "./CampaignRoadmap";
-import NicheBriefAnalyzer from "./NicheBriefAnalyzer";
 import { useSettings } from "./SettingsContext";
 import { exportCampaignToZip, type ExportData } from "@/lib/zipExporter";
 import { generateCampaignPDF, type PDFData } from "@/lib/pdfExporter";
-import ScoreBreakdown from "./ScoreBreakdown";
 import CampaignAdvisor from "./CampaignAdvisor";
 import AnimatedSelect from "./AnimatedSelect";
 
@@ -35,18 +32,6 @@ interface StoryboardItem {
   audio: string;
 }
 
-interface VibeScoreData {
-  vibeScore: number;
-  hookPower: number;
-  emotionalTrigger: number;
-  ctaUrgency: number;
-  copyClarity: number;
-  engagementPotential: number;
-  label: string;
-  reasons: string[];
-  quickFix: string;
-}
-
 export interface GenerateResult {
   productName?: string;
   contentType?: string;
@@ -55,7 +40,6 @@ export interface GenerateResult {
   broadcast: string;
   todoList: string[];
   storyboard: StoryboardItem[];
-  vibeScore: VibeScoreData;
   contentCalendar?: ContentCalendarEntry[];
   shootScript?: ShootScriptData;
   nicheRecommendation?: string;
@@ -118,7 +102,7 @@ interface GeneratorDashboardProps {
     targetAudience: string,
     contentType: string
   ) => void;
-  // Fires whenever the local result is updated (e.g. by CampaignAdvisor score changes)
+  // Fires whenever the local result is updated
   onResultUpdate?: (data: GenerateResult) => void;
 }
 
@@ -685,137 +669,6 @@ function ShootScriptCard({
   );
 }
 
-// ==============================================
-// VIBE SCORE CARD (with circular ring + count-up)
-// ==============================================
-function VibeScoreCard({
-  score,
-  onCopy,
-  copied,
-  isLoading,
-}: {
-  score: VibeScoreData;
-  onCopy?: () => void;
-  copied?: boolean;
-  isLoading?: boolean;
-}) {
-  const { isDark } = useSettings();
-  const [displayScore, setDisplayScore] = useState(0);
-  const colorClass = score.vibeScore <= 40 ? "text-red-500" : score.vibeScore <= 70 ? "text-yellow-500" : "text-green-500";
-  const ringColorClass = score.vibeScore <= 40 ? "#ef4444" : score.vibeScore <= 70 ? "#eab308" : "#22c55e";
-  const bgClass = score.vibeScore <= 40 ? "bg-red-50" : score.vibeScore <= 70 ? "bg-yellow-50" : "bg-green-50";
-
-  // Count-up animation
-  useEffect(() => {
-    if (isLoading || score.vibeScore === 0) return;
-    setDisplayScore(0);
-    const duration = 1500;
-    const startTime = Date.now();
-    const target = score.vibeScore;
-
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayScore(Math.round(eased * target));
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    requestAnimationFrame(animate);
-  }, [score.vibeScore, isLoading]);
-
-  // Conic gradient for ring: percentage filled with color, rest gray
-  const fillDeg = (score.vibeScore / 100) * 360;
-  const ringBg = `conic-gradient(${ringColorClass} 0deg ${fillDeg}deg, ${isDark ? "#334155" : "#e5e7eb"} ${fillDeg}deg 360deg)`;
-
-  return (
-    <div className="glass-card p-5 relative group lg:col-span-2 transition-all duration-200">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="inline-block bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-            Score
-          </span>
-          <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-1.5">
-            <span>🔥</span> Vibe Score
-          </h3>
-        </div>
-        {!isLoading && onCopy && (
-          <button
-            onClick={onCopy}
-            className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1.5 rounded-lg hover:bg-purple-50 text-gray-400 hover:text-purple-600"
-          >
-            {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
-          </button>
-        )}
-      </div>
-      {isLoading ? (
-        <div className="space-y-2">
-          <div className="skeleton h-24 w-24 rounded-full" />
-          <div className="skeleton h-4 w-full" />
-          <div className="skeleton h-4 w-5/6" />
-        </div>
-      ) : (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-          {/* Circular progress ring with score */}
-          <div className="relative flex-shrink-0">
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center"
-              style={{ background: ringBg }}
-            >
-              <div className="w-[80px] h-[80px] rounded-full bg-white flex items-center justify-center">
-                <span className={`text-3xl font-black ${colorClass} leading-none`}>
-                  {displayScore}
-                </span>
-              </div>
-            </div>
-            {/* "out of 100" label below */}
-            <p className="text-[10px] text-center text-gray-400 mt-1">out of 100</p>
-          </div>
-
-          {/* Label + Reasons */}
-          <div className="flex-1">
-            <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${bgClass} ${colorClass}`}>
-              {score.label}
-            </div>
-            <ul className="space-y-1">
-              {score.reasons.map((r, i) => (
-                <li key={i} className="text-xs text-gray-500 flex items-start gap-2">
-                  <span className="text-purple-400 mt-0.5">•</span>
-                  {r}
-                </li>
-              ))}
-            </ul>
-
-            {/* Formula display */}
-            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10">
-              <p className="text-[10px] text-gray-400 font-medium mb-1.5 flex items-center gap-1">
-                📐 Formula: <span className="font-mono">hookPower×0.25 + emotionalTrigger×0.20 + ctaUrgency×0.20 + copyClarity×0.20 + engagementPotential×0.15</span>
-              </p>
-              <div className="grid grid-cols-5 gap-1.5">
-                {[
-                  { label: "Hook", value: score.hookPower, weight: 25 },
-                  { label: "Emotional", value: score.emotionalTrigger, weight: 20 },
-                  { label: "CTA", value: score.ctaUrgency, weight: 20 },
-                  { label: "Clarity", value: score.copyClarity, weight: 20 },
-                  { label: "Engage", value: score.engagementPotential, weight: 15 },
-                ].map(({ label, value, weight }) => (
-                  <div key={label} className="text-center bg-gray-50 dark:bg-white/5 rounded-lg py-1.5 px-1">
-                    <div className={"text-xs font-bold " + (value >= 70 ? "text-green-500" : value >= 50 ? "text-yellow-500" : "text-red-400")}>
-                      {value}
-                    </div>
-                    <div className="text-[9px] text-gray-400">{label}×{weight}%</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ==============================================
 // SALES PAGE CARD (with Read More toggle)
@@ -959,7 +812,6 @@ export default function GeneratorDashboard({
     "Menganalisis audiens...",
     "Meracik copywriting...",
     "Menyusun storyboard...",
-    "Menghitung Vibe Score...",
     "Menyiapkan kalender konten..."
   ];
 
@@ -1021,7 +873,7 @@ export default function GeneratorDashboard({
         broadcast: result.broadcast,
         todoList: result.todoList,
         storyboard: result.storyboard,
-        vibeScore: result.vibeScore,
+        vibeScore: undefined,
         contentCalendar: result.contentCalendar,
         shootScript: result.shootScript,
         nicheRecommendation: result.nicheRecommendation,
@@ -1049,7 +901,7 @@ export default function GeneratorDashboard({
         broadcast: result.broadcast,
         todoList: result.todoList,
         storyboard: result.storyboard,
-        vibeScore: result.vibeScore,
+        vibeScore: undefined,
         contentCalendar: result.contentCalendar,
         shootScript: result.shootScript,
         nicheRecommendation: result.nicheRecommendation,
@@ -1180,9 +1032,6 @@ export default function GeneratorDashboard({
   const todoListText = result?.todoList?.map((t, i) => `${i + 1}. ${t}`).join("\n") ?? "";
   const storyboardText =
     result?.storyboard.map((s) => `${s.shot}\nVisual: ${s.visual}\nAudio: ${s.audio}`).join("\n\n") ?? "";
-  const vibeScoreText = result
-    ? `Vibe Score: ${result.vibeScore.vibeScore}/100\nLabel: ${result.vibeScore.label}\n\nReasons:\n${result.vibeScore.reasons.map((r, i) => `${i + 1}. ${r}`).join("\n")}${result.vibeScore.quickFix ? `\n\nQuick Fix: ${result.vibeScore.quickFix}` : ""}`
-    : "";
 
   const showNicheFinder = formData.contentType === "Niche Finder";
 
@@ -1223,10 +1072,13 @@ export default function GeneratorDashboard({
       )}
 
       <div className="min-h-screen bg-transparent pt-3 md:pt-6 pb-8 px-3 md:px-4 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[38%_62%] gap-4 md:gap-6 items-start">
+        {/* Split view: left = form+results (60%), right = AI Advisor (420px) */}
+        <div className="max-w-full mx-auto grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-4 md:gap-6 items-start">
 
-          {/* ===== LEFT COLUMN — INPUT FORM ===== */}
-          <div className="glass-card p-4 md:p-6 lg:sticky lg:top-20 space-y-4 md:space-y-5 animate-slide-up">
+          {/* ===== LEFT COLUMN — INPUT FORM + RESULTS ===== */}
+          <div className="space-y-4">
+            {/* Sticky Form */}
+            <div className="glass-card p-4 md:p-6 lg:sticky lg:top-20 space-y-4 md:space-y-5 animate-slide-up">
 
             {/* Welcome Banner */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-gray-100 dark:border-white/10">
@@ -1500,8 +1352,9 @@ export default function GeneratorDashboard({
               ✨ AI-Powered by Google Gemini
             </p>
           </div>
+          </div>
 
-          {/* ===== RIGHT COLUMN — BENTO OUTPUT GRID ===== */}
+          {/* ===== MIDDLE COLUMN — RESULTS BENTO GRID ===== */}
           <div ref={bentoGridRef}>
             <div className="space-y-4">
               {!result && !isLoading ? (
@@ -1645,145 +1498,68 @@ export default function GeneratorDashboard({
                     </div>
                   )}
 
-                  {/* Row 7: Vibe Score */}
-                  <div className="animate-enter-5">
-                    <VibeScoreCard
-                      score={result?.vibeScore ?? { vibeScore: 0, hookPower: 0, emotionalTrigger: 0, ctaUrgency: 0, copyClarity: 0, engagementPotential: 0, label: "", reasons: [], quickFix: "" }}
-                      isLoading={isLoading}
-                      copied={copiedCard === "vibeScore"}
-                      onCopy={() => handleCopy("vibeScore", vibeScoreText)}
-                    />
-                  </div>
-
-                  {/* Row 7b: Quick Fix Card (shown when score < 70) */}
-                  {result && result.vibeScore && result.vibeScore.vibeScore < 70 && result.vibeScore.quickFix && (
-                    <div className="glass-card p-4 border-l-4 border-amber-400 animate-enter-5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-block bg-amber-100 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-                          ⚡ Quick Fix
-                        </span>
-                        <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm">
-                          Cara Cepat Meningkatkan Score
-                        </h3>
-                      </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-                        {result.vibeScore.quickFix}
-                      </p>
-                      {result.vibeScore.vibeScore < 40 && (
-                        <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1">
-                          💡 Tip: Perbaiki komponen dengan score terendah dulu untuk dampak terbesar.
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Row 6b: AI Score Breakdown */}
-                  {result && (
-                    <div className="animate-enter-5 mt-4">
-                      <ScoreBreakdown
-                        overallScore={result.vibeScore?.vibeScore ?? 0}
-                        label={result.vibeScore?.label ?? ""}
-                        caption={result.caption}
-                        landingPage={result.landingPage}
-                        broadcast={result.broadcast}
-                        todoList={result.todoList}
-                        hookPower={result.vibeScore?.hookPower}
-                        emotionalTrigger={result.vibeScore?.emotionalTrigger}
-                        ctaUrgency={result.vibeScore?.ctaUrgency}
-                        copyClarity={result.vibeScore?.copyClarity}
-                        engagementPotential={result.vibeScore?.engagementPotential}
-                      />
-                    </div>
-                  )}
-
-                  {/* Row 9: Niche Competitor Brief */}
-                  <div className="animate-enter-7 mt-4">
-                    <NicheBriefAnalyzer
-                        productName={formData.productName}
-                        description={formData.description}
-                        contentType={formData.contentType}
-                      />
-                  </div>
-
-                  {/* Row 10: AI Campaign Advisor */}
-                  {result && (
-                    <div className="animate-enter-7 mt-4">
-                      <CampaignAdvisor
-                        result={result as Parameters<typeof CampaignAdvisor>[0]["result"]}
-                        onUpdateResult={setResult as (r: GenerateResult) => void}
-                      />
-                    </div>
-                  )}
-
                   {/* Action Bar */}
-                  {result && (
-                    <div className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-enter-7">
-                      {/* Left: Branding */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex-shrink-0 flex items-center justify-center">
-                          <Image 
-                            src={isDark ? "/logo_white.png" : "/logo_new.png"} 
-                            alt="Logo" 
-                            width={44} 
-                            height={44} 
-                            className="object-contain"
-                          />
-                        </div>
-                        <div>
-                          <p className="text-[12px] font-bold text-gray-800 dark:text-gray-100 leading-none">FlowFOR Creative</p>
-                          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Powered by FlowFOR #JuaraVibeCoding</p>
-                        </div>
+                  <div className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-enter-7">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-shrink-0 flex items-center justify-center">
+                        <Image
+                          src={isDark ? "/logo_white.png" : "/logo_new.png"}
+                          alt="Logo"
+                          width={44}
+                          height={44}
+                          className="object-contain"
+                        />
                       </div>
-
-                      {/* Right: Action Buttons */}
-                      <div className="flex gap-2.5 flex-wrap">
-
-                        <button
-                          onClick={() => setShowMobilePreview(true)}
-                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-indigo-300
-                                     text-indigo-600 font-semibold text-xs hover:bg-indigo-50
-                                     active:scale-95 transition-all duration-200"
-                        >
-                          <Smartphone size={14} />
-                          Preview
-                        </button>
-
-                        <button
-                          onClick={handleExportZip}
-                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-green-300
-                                     text-green-600 font-semibold text-xs hover:bg-green-50
-                                     active:scale-95 transition-all duration-200 shadow-sm"
-                        >
-                          <Package size={14} />
-                          Download ZIP
-                        </button>
-
-                        <button
-                          onClick={handleExportPDF}
-                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-amber-300
-                                     text-amber-600 font-semibold text-xs hover:bg-amber-50
-                                     active:scale-95 transition-all duration-200 shadow-sm"
-                        >
-                          <Download size={14} />
-                          PDF Report
-                        </button>
-
-                        <button
-                          onClick={handleLinkedInShare}
-                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs
-                                     hover:bg-blue-700 active:scale-95 transition-all duration-200 shadow-sm"
-                        >
-                          <Share2 size={14} />
-                          Share
-                        </button>
+                      <div>
+                        <p className="text-[12px] font-bold text-gray-800 dark:text-gray-100 leading-none">FlowFOR Creative</p>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Powered by FlowFOR #JuaraVibeCoding</p>
                       </div>
                     </div>
-                  )}
+                    <div className="flex gap-2.5 flex-wrap">
+                      <button
+                        onClick={() => setShowMobilePreview(true)}
+                        className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-indigo-300 text-indigo-600 font-semibold text-xs hover:bg-indigo-50 active:scale-95 transition-all duration-200"
+                      >
+                        <Smartphone size={14} />
+                        Preview
+                      </button>
+                      <button
+                        onClick={handleExportZip}
+                        className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-green-300 text-green-600 font-semibold text-xs hover:bg-green-50 active:scale-95 transition-all duration-200 shadow-sm"
+                      >
+                        <Package size={14} />
+                        Download ZIP
+                      </button>
+                      <button
+                        onClick={handleExportPDF}
+                        className="flex items-center gap-2 px-3.5 py-2 rounded-xl border-2 border-amber-300 text-amber-600 font-semibold text-xs hover:bg-amber-50 active:scale-95 transition-all duration-200 shadow-sm"
+                      >
+                        <Download size={14} />
+                        PDF Report
+                      </button>
+                      <button
+                        onClick={handleLinkedInShare}
+                        className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs hover:bg-blue-700 active:scale-95 transition-all duration-200 shadow-sm"
+                      >
+                        <Share2 size={14} />
+                        Share
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
           </div>
 
+          {/* ===== RIGHT COLUMN — AI ADVISOR (~420px, sticky) ===== */}
+          {result && (
+            <div className="lg:sticky lg:top-20 animate-enter-5">
+              <CampaignAdvisor
+                result={result as Parameters<typeof CampaignAdvisor>[0]["result"]}
+                onUpdateResult={setResult as (r: GenerateResult) => void}
+              />
+            </div>
+          )}
         </div>
       </div>
 

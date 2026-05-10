@@ -15,7 +15,7 @@ export interface PDFData {
   broadcast: string;
   todoList: string[];
   storyboard: { shot: string; visual: string; audio: string }[];
-  vibeScore: { vibeScore: number; label: string; reasons: string[]; quickFix?: string };
+  vibeScore?: { vibeScore: number; label: string; reasons: string[]; quickFix?: string };
   contentCalendar?: {
     day: number;
     date: string;
@@ -156,38 +156,38 @@ export async function generateCampaignPDF(data: PDFData): Promise<Blob> {
   doc.setLineWidth(0.3);
   doc.line(margin, y, pageW - margin, y);
 
-  // Vibe Score Card
-  y += 8;
-  const score = data.vibeScore?.vibeScore ?? 0;
-  const label = data.vibeScore?.label ?? "";
-  const scoreColorHex = scoreColor(score);
+  // Vibe Score section — only render if data exists
+  if (data.vibeScore) {
+    y += 8;
+    const score = data.vibeScore.vibeScore;
+    const label = data.vibeScore.label;
+    const scoreColorHex = scoreColor(score);
 
-  // Score circle bg
-  doc.setFillColor(249, 240, 255);
-  doc.roundedRect(margin, y, 60, 32, 3, 3, "F");
+    doc.setFillColor(249, 240, 255);
+    doc.roundedRect(margin, y, 60, 32, 3, 3, "F");
 
-  // Score big number
-  doc.setTextColor(scoreColorHex);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(28);
-  doc.text(String(score), margin + 10, y + 16);
-  doc.setFontSize(10);
-  doc.text("/100", margin + 26, y + 16);
+    doc.setTextColor(scoreColorHex);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(28);
+    doc.text(String(score), margin + 10, y + 16);
+    doc.setFontSize(10);
+    doc.text("/100", margin + 26, y + 16);
 
-  // Score label
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(purple);
-  doc.text(label, margin + 10, y + 22);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(purple);
+    doc.text(label, margin + 10, y + 22);
 
-  // Score reason
-  doc.setTextColor(gray);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.5);
-  const reasons = data.vibeScore?.reasons ?? [];
-  if (reasons[0]) {
-    const rLines = doc.splitTextToSize(`• ${reasons[0]}`, 45);
-    doc.text(rLines[0], margin + 10, y + 27);
+    doc.setTextColor(gray);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    if (data.vibeScore.reasons[0]) {
+      const rLines = doc.splitTextToSize(`• ${data.vibeScore.reasons[0]}`, 45);
+      doc.text(rLines[0], margin + 10, y + 27);
+    }
+    y += 38;
+  } else {
+    y += 8;
   }
 
   // Content preview cards

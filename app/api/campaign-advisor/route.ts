@@ -44,20 +44,19 @@ PERSONA:
 ATURAN UTAMA:
 1. Jawab dalam Bahasa Indonesia dengan conversational tone
 2. Kalau user kirim data campaign, berikan saran BERDASARKAN data tersebut
-3. Kalau ada masalah spesifik (score rendah, caption pendek, dll), berikan SOLUSI spesifik
+3. Kalau ada masalah spesifik, berikan SOLUSI spesifik
 4. Kalau user minta "perbaiki" atau "apply", berikan output BERUBAH yang langsung bisa dipake
 5. Kalau pertanyaan di luar topic campaign (hal politik, illegal, dll), declined dengan sopan
 
 OUTPUT JSON:
 {
-  "answer": "string (jawaban lengkap dalam Bahasa Indonesia, conversational, actionable)",
+  "answer": "string (jawaban lengkap dalam Bahasa Indonesia, conversational, actionable, min 50 chars)",
   "suggestedImprovements": {
-    "landingPage": "string | null (kalau ada suggesti improve sales page, kasih versi improved nya. null kalau tidak perlu)",
-    "caption": "string | null (kalau ada suggesti improve caption, kasih versi improved nya. null kalau tidak perlu)",
-    "broadcast": "string | null (kalou ada suggesti improve broadcast message, kasih versi improved nya. null kalau tidak perlu)",
-    "vibeScore": "number | null (kalau ada suggesti score baru, kasih number 0-100. null kalau tidak perlu)"
+    "landingPage": "string | null (versi improve sales page, atau null)",
+    "caption": "string | null (versi improve caption, atau null)",
+    "broadcast": "string | null (versi improve broadcast, atau null)"
   },
-  "tipSummary": "string (1 kalimat ringkasan tip paling penting dari jawaban ini)"
+  "tipSummary": "string (1 kalimat ringkasan tip paling penting)"
 }`;
 
 // ==============================================
@@ -74,7 +73,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse + validate body
     let body: {
       question: string;
       campaignData?: {
@@ -83,12 +81,6 @@ export async function POST(req: NextRequest) {
         landingPage?: string;
         caption?: string;
         broadcast?: string;
-        vibeScore?: number;
-        hookPower?: number;
-        emotionalTrigger?: number;
-        ctaUrgency?: number;
-        copyClarity?: number;
-        engagementPotential?: number;
         todoList?: string[];
         storyboard?: { shot: string; visual: string; audio: string }[];
       };
@@ -119,26 +111,19 @@ export async function POST(req: NextRequest) {
     // Build campaign context
     let campaignContext = "";
     if (campaignData) {
-      const vs = campaignData;
+      const cd = campaignData;
       campaignContext = `
-DATA CAMPAIGN SAAT INI:
-- Produk: ${vs.productName || "—"}
-- Content Type: ${vs.contentType || "—"}
-- Vibe Score: ${vs.vibeScore ?? "—"}/100
-${vs.hookPower != null ? `- Hook Power: ${vs.hookPower}/100` : ""}
-${vs.emotionalTrigger != null ? `- Emotional Trigger: ${vs.emotionalTrigger}/100` : ""}
-${vs.ctaUrgency != null ? `- CTA Urgency: ${vs.ctaUrgency}/100` : ""}
-${vs.copyClarity != null ? `- Copy Clarity: ${vs.copyClarity}/100` : ""}
-${vs.engagementPotential != null ? `- Engagement Potential: ${vs.engagementPotential}/100` : ""}
-${vs.landingPage ? `- Sales Page:\n${vs.landingPage.slice(0, 500)}` : ""}
-${vs.caption ? `- Caption:\n${vs.caption.slice(0, 500)}` : ""}
-${vs.broadcast ? `- Broadcast:\n${vs.broadcast.slice(0, 500)}` : ""}
-${vs.todoList?.length ? `- To-Do List:\n${vs.todoList.map((t, i) => `${i + 1}. ${t}`).join("\n")}` : ""}
-${vs.storyboard?.length ? `- Storyboard:\n${vs.storyboard.map((s) => `${s.shot}: ${s.visual}`).join("\n")}` : ""}
+DATA CAMPAIGN:
+- Produk: ${cd.productName || "—"}
+- Content Type: ${cd.contentType || "—"}
+${cd.landingPage ? `- Sales Page:\n${cd.landingPage.slice(0, 500)}` : ""}
+${cd.caption ? `- Caption:\n${cd.caption.slice(0, 500)}` : ""}
+${cd.broadcast ? `- Broadcast:\n${cd.broadcast.slice(0, 500)}` : ""}
+${cd.todoList?.length ? `- To-Do List:\n${cd.todoList.map((t, i) => `${i + 1}. ${t}`).join("\n")}` : ""}
+${cd.storyboard?.length ? `- Storyboard:\n${cd.storyboard.map((s) => `${s.shot}: ${s.visual}`).join("\n")}` : ""}
 `;
     }
 
-    // Execute with automatic key retry on 429 quota errors
     const parsed = await withKeyRetry(async (apiKey) => {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({

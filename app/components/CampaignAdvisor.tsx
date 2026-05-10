@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { MessageCircle, Send, Loader2, Zap, X, Check, Lightbulb, RefreshCw } from "lucide-react";
-import { useSettings } from "./SettingsContext";
+import { MessageCircle, Send, Loader2, Check, Lightbulb, RefreshCw } from "lucide-react";
 import type { GenerateResult } from "./GeneratorDashboard";
 
 interface AdvisorMessage {
@@ -22,18 +21,16 @@ interface AdvisorResponse {
     landingPage: string | null;
     caption: string | null;
     broadcast: string | null;
-    vibeScore: number | null;
   };
   tipSummary: string;
 }
 
 export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps) {
-  const { isDark } = useSettings();
   const [messages, setMessages] = useState<AdvisorMessage[]>([
     {
       id: "welcome",
       role: "model",
-      text: `Halo! 👋 Saya AI Campaign Advisor kamu. Mau tanya soal campaign "${result.productName || "produk kamu"}"? Silakan! Contoh:\n\n• "Kok vibe score gua rendah? Apa yang perlu dibenerin?"\n• "Rekomendasiin cara naikkan hook power di caption gua"\n• "Gimana sih bikin CTA yang lebih urgent?"`,
+      text: `Halo! 👋 Saya AI Campaign Advisor kamu. Mau tanya soal launch campaign "${result.productName || "produk kamu"}"? Silakan! Contoh:\n\n• "Rekomendasiin cara improve caption gua"\n• "Gimana bikin CTA yang lebih efektif?"\n• "Bantu bikin sales page yang lebih persuasif"`,
     },
   ]);
   const [input, setInput] = useState("");
@@ -75,12 +72,6 @@ export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps
             landingPage: result.landingPage,
             caption: result.caption,
             broadcast: result.broadcast,
-            vibeScore: result.vibeScore?.vibeScore,
-            hookPower: result.vibeScore?.hookPower,
-            emotionalTrigger: result.vibeScore?.emotionalTrigger,
-            ctaUrgency: result.vibeScore?.ctaUrgency,
-            copyClarity: result.vibeScore?.copyClarity,
-            engagementPotential: result.vibeScore?.engagementPotential,
             todoList: result.todoList,
             storyboard: result.storyboard,
           },
@@ -152,7 +143,7 @@ export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps
       {expanded && (
         <div className="space-y-3 animate-slide-up">
           {/* Chat Messages */}
-          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
             {messages.map((msg) => (
               <div
                 key={msg.id}
