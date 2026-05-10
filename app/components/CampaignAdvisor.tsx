@@ -106,7 +106,7 @@ export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps
     }
   }, [input, isLoading, messages, result]);
 
-  const handleApply = (key: keyof AdvisorResponse["suggestedImprovements"]) => {
+  const handleApply = (key: "landingPage" | "caption" | "broadcast") => {
     if (!suggestions || !suggestions[key]) return;
 
     const updated = { ...result };
@@ -117,14 +117,6 @@ export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps
       updated.caption = suggestions.caption;
     } else if (key === "broadcast" && suggestions.broadcast) {
       updated.broadcast = suggestions.broadcast;
-    } else if (key === "vibeScore" && suggestions.vibeScore !== null) {
-      updated.vibeScore = {
-        ...updated.vibeScore,
-        score: suggestions.vibeScore,
-        label: suggestions.vibeScore >= 80 ? "High Viral Potential"
-          : suggestions.vibeScore >= 60 ? "Solid Launch Ready"
-          : suggestions.vibeScore >= 40 ? "Good Foundation" : "Needs Work",
-      };
     }
 
     onUpdateResult(updated);
@@ -133,7 +125,7 @@ export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps
   };
 
   const hasSuggestions = suggestions && (
-    suggestions.landingPage || suggestions.caption || suggestions.broadcast || suggestions.vibeScore !== null
+    suggestions.landingPage || suggestions.caption || suggestions.broadcast
   );
 
   return (
@@ -225,14 +217,6 @@ export default function CampaignAdvisor({ result, onUpdateResult }: AdvisorProps
                   preview={suggestions.broadcast.slice(0, 80) + "..."}
                   applied={applied.broadcast ?? false}
                   onApply={() => handleApply("broadcast")}
-                />
-              )}
-              {suggestions.vibeScore !== null && (
-                <SuggestionItem
-                  label={`Vibe Score → ${suggestions.vibeScore}`}
-                  preview={`AI rekomendasikan score ${suggestions.vibeScore}/100`}
-                  applied={applied.vibeScore ?? false}
-                  onApply={() => handleApply("vibeScore")}
                 />
               )}
             </div>
