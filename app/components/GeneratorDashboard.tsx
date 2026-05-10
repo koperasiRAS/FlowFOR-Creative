@@ -1072,13 +1072,11 @@ export default function GeneratorDashboard({
       )}
 
       <div className="min-h-screen bg-transparent pt-3 md:pt-6 pb-8 px-3 md:px-4 transition-colors duration-300">
-        {/* Split view: left = form+results (60%), right = AI Advisor (420px) */}
-        <div className="max-w-full mx-auto grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-4 md:gap-6 items-start">
+        {/* Left col: form (compact, sticky) · Right col: results grid + AI Advisor (prominent) */}
+        <div className="max-w-7xl mx-auto grid grid-cols-[340px_1fr] gap-4 md:gap-6 items-start">
 
-          {/* ===== LEFT COLUMN — INPUT FORM + RESULTS ===== */}
-          <div className="space-y-4">
-            {/* Sticky Form */}
-            <div className="glass-card p-4 md:p-6 lg:sticky lg:top-20 space-y-4 md:space-y-5 animate-slide-up">
+          {/* ===== LEFT COLUMN — INPUT FORM (compact, sticky) ===== */}
+          <div className="glass-card p-4 md:p-5 lg:sticky lg:top-20 space-y-4 animate-slide-up">
 
             {/* Welcome Banner */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-gray-100 dark:border-white/10">
@@ -1352,11 +1350,9 @@ export default function GeneratorDashboard({
               ✨ AI-Powered by Google Gemini
             </p>
           </div>
-          </div>
 
-          {/* ===== MIDDLE COLUMN — RESULTS BENTO GRID ===== */}
-          <div ref={bentoGridRef}>
-            <div className="space-y-4">
+          {/* ===== RIGHT COLUMN — RESULTS + ACTION BAR ===== */}
+          <div ref={bentoGridRef} className="space-y-4">
               {!result && !isLoading ? (
                 <EmptyState />
               ) : (
@@ -1549,17 +1545,15 @@ export default function GeneratorDashboard({
                 </>
               )}
             </div>
-          </div>
 
-          {/* ===== RIGHT COLUMN — AI ADVISOR (~420px, sticky) ===== */}
-          {result && (
-            <div className="lg:sticky lg:top-20 animate-enter-5">
+            {/* AI Campaign Advisor — prominent right side */}
+            {result && (
               <CampaignAdvisor
                 result={result as Parameters<typeof CampaignAdvisor>[0]["result"]}
                 onUpdateResult={setResult as (r: GenerateResult) => void}
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
