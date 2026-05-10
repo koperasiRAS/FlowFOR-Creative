@@ -9,29 +9,26 @@ const requiredEnvVars = ["GEMINI_API_KEY"] as const;
 
 type EnvVar = (typeof requiredEnvVars)[number];
 
-function validateEnv(): Record<EnvVar, string> {
-  const missing: string[] = [];
-  const env: Partial<Record<EnvVar, string>> = {};
-
-  for (const key of requiredEnvVars) {
-    const value = process.env[key];
-    if (!value || value.trim() === "") {
-      missing.push(key);
-    } else {
-      env[key] = value;
+// Use a Proxy to evaluate env vars lazily.
+// This prevents Next.js from crashing during the build phase (e.g. on Cloud Run)
+// when it statically analyzes API routes before runtime env vars are injected.
+export const env = new Proxy({} as Record<EnvVar, string>, {
+  get(_, prop: string) {
+    if (requiredEnvVars.includes(prop as EnvVar)) {
+      const value = process.env[prop];
+      if (!value || value.trim() === "") {
+        // If we are building, we just warn to allow build to succeed.
+        if (process.env.npm_lifecycle_event === "build") {
+          console.warn(`[FlowFOR] Warning: Missing environment variable during build: ${prop}`);
+          return "";
+        }
+        throw new Error(
+          `[FlowFOR] Missing required environment variable: ${prop}\n` +
+          `Please check your .env.local file or Cloud Run environment settings.`
+        );
+      }
+      return value;
     }
+    return process.env[prop];
   }
-
-  if (missing.length > 0) {
-    throw new Error(
-      `[FlowFOR] Missing required environment variables: ${missing.join(", ")}\n` +
-        `Please check your .env.local file or Cloud Run environment settings.\n` +
-        `See .env.example for reference.`
-    );
-  }
-
-  return env as Record<EnvVar, string>;
-}
-
-// Throws at import time if env is misconfigured
-export const env = validateEnv();
+});
