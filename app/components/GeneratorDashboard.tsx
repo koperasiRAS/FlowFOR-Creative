@@ -629,10 +629,10 @@ function ShootScriptCard({
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-cyan-50/80 dark:bg-cyan-950/20">
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest rounded-tl-xl border-b border-cyan-100 dark:border-cyan-900/30">Scene</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest border-b border-cyan-100 dark:border-cyan-900/30">Action</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest border-b border-cyan-100 dark:border-cyan-900/30">Dialogue</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest rounded-tr-xl border-b border-cyan-100 dark:border-cyan-900/30">Camera</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest rounded-tl-xl border-b border-cyan-100 dark:border-cyan-900/30 w-[15%] min-w-[100px]">Scene</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest border-b border-cyan-100 dark:border-cyan-900/30 w-[35%] min-w-[200px]">Action</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest border-b border-cyan-100 dark:border-cyan-900/30 w-[30%] min-w-[200px]">Dialogue</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-bold text-cyan-700/80 dark:text-cyan-400 uppercase tracking-widest rounded-tr-xl border-b border-cyan-100 dark:border-cyan-900/30 w-[20%] min-w-[140px]">Camera</th>
               </tr>
             </thead>
             <tbody>

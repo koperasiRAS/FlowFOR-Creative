@@ -55,7 +55,8 @@ SHOOT SCRIPT (shootScript):
 - Buat practical shooting script berdasarkan contentType.
 - Untuk Reels/TikTok: 8-10 scenes, max 60 detik total.
 - Untuk YouTube: 5-7 scenes, struktur intro+isi+outro.
-- Untuk Podcast: 4-5 segments, tanpa kolom camera.
+- Untuk Podcast: 4-5 segments, kolom camera WAJIB diisi tulisan 'Audio Only'.
+- PASTIKAN kolom "camera" SELALU DIISI (jangan pernah dikosongkan).
 - SELALU include 2 practical production tips.
 
 NICHE FINDER:
